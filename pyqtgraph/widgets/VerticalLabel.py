@@ -1,13 +1,12 @@
-import warnings
-
-from ..Qt import QtCore, QtGui, QtWidgets
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui, QtCore
 
 __all__ = ['VerticalLabel']
-#class VerticalLabel(QtWidgets.QLabel):
+#class VerticalLabel(QtGui.QLabel):
     #def paintEvent(self, ev):
         #p = QtGui.QPainter(self)
         #p.rotate(-90)
-        #self.hint = p.drawText(QtCore.QRect(-self.height(), 0, self.height(), self.width()), QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter, self.text())
+        #self.hint = p.drawText(QtCore.QRect(-self.height(), 0, self.height(), self.width()), QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter, self.text())
         #p.end()
         #self.setMinimumWidth(self.hint.height())
         #self.setMinimumHeight(self.hint.width())
@@ -18,9 +17,9 @@ __all__ = ['VerticalLabel']
         #else:
             #return QtCore.QSize(16, 50)
 
-class VerticalLabel(QtWidgets.QLabel):
+class VerticalLabel(QtGui.QLabel):
     def __init__(self, text, orientation='vertical', forceWidth=True):
-        QtWidgets.QLabel.__init__(self, text)
+        QtGui.QLabel.__init__(self, text)
         self.forceWidth = forceWidth
         self.orientation = None
         self.setOrientation(orientation)
@@ -46,10 +45,9 @@ class VerticalLabel(QtWidgets.QLabel):
         else:
             rgn = self.contentsRect()
         align = self.alignment()
-        #align  = QtCore.Qt.AlignmentFlag.AlignTop|QtCore.Qt.AlignmentFlag.AlignHCenter
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.hint = p.drawText(rgn, align, self.text())
+        #align  = QtCore.Qt.AlignTop|QtCore.Qt.AlignHCenter
+            
+        self.hint = p.drawText(rgn, align, self.text())
         p.end()
         
         if self.orientation == 'vertical':
@@ -83,10 +81,10 @@ class VerticalLabel(QtWidgets.QLabel):
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
-    win = QtWidgets.QMainWindow()
-    w = QtWidgets.QWidget()
-    l = QtWidgets.QGridLayout()
+    app = QtGui.QApplication([])
+    win = QtGui.QMainWindow()
+    w = QtGui.QWidget()
+    l = QtGui.QGridLayout()
     w.setLayout(l)
     
     l1 = VerticalLabel("text 1", orientation='horizontal')

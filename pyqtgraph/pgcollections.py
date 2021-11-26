@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 advancedTypes.py - Basic data structures not included with python 
 Copyright 2010  Luke Campagnola
@@ -9,16 +10,15 @@ Includes:
   - ThreadsafeDict, ThreadsafeList - Self-mutexed data structures
 """
 
-import warnings
-
-warnings.warn(
-    "None of these are used in pyqtgraph. Will be removed in 0.13",
-    DeprecationWarning, stacklevel=2
-)
-
-import copy
 import threading
-from collections import OrderedDict
+import sys
+import copy
+
+try:
+    from collections import OrderedDict
+except ImportError:
+    # fallback: try to use the ordereddict backport when using python 2.6
+    from ordereddict import OrderedDict
 
 try:
     from collections.abc import Sequence

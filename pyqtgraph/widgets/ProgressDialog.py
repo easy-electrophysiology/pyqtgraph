@@ -1,16 +1,15 @@
-from time import perf_counter
-
-from ..Qt import QtCore, QtGui, QtWidgets
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui, QtCore
 
 __all__ = ['ProgressDialog']
 
 
-class ProgressDialog(QtWidgets.QProgressDialog):
+class ProgressDialog(QtGui.QProgressDialog):
     """
     Extends QProgressDialog:
     
-      * Adds context management so the dialog may be used in `with` statements
-      * Allows nesting multiple progress dialogs
+    * Adds context management so the dialog may be used in `with` statements
+    * Allows nesting multiple progress dialogs
 
     Example::
 
@@ -41,7 +40,7 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         nested         (bool) If True, then this progress bar will be displayed inside
                        any pre-existing progress dialogs that also allow nesting.
         ============== ================================================================
-        """
+        """    
         # attributes used for nesting dialogs
         self.nestedLayout = None
         self._nestableWidgets = None
@@ -49,9 +48,6 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         self._topDialog = None
         self._subBars = []
         self.nested = nested
-
-        # for rate-limiting Qt event processing during progress bar update
-        self._lastProcessEvents = None
         
         isGuiThread = QtCore.QThread.currentThread() == QtCore.QCoreApplication.instance().thread()
         self.disabled = disable or (not isGuiThread)
@@ -65,7 +61,7 @@ class ProgressDialog(QtWidgets.QProgressDialog):
             
         self.busyCursor = busyCursor
 
-        QtWidgets.QProgressDialog.__init__(self, labelText, cancelText, minimum, maximum, parent)
+        QtGui.QProgressDialog.__init__(self, labelText, cancelText, minimum, maximum, parent)
         
         # If this will be a nested dialog, then we ignore the wait time
         if nested is True and len(ProgressDialog.allDialogs) > 0:
@@ -73,7 +69,7 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         else:
             self.setMinimumDuration(wait)
             
-        self.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+        self.setWindowModality(QtCore.Qt.WindowModal)
         self.setValue(self.minimum())
         if noCancel:
             self.setCancelButton(None)
@@ -82,7 +78,7 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         if self.disabled:
             return self
         if self.busyCursor:
-            QtWidgets.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.CursorShape.WaitCursor))
+            QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
         
         if self.nested and len(ProgressDialog.allDialogs) > 0:
             topDialog = ProgressDialog.allDialogs[0]
@@ -98,7 +94,7 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         if self.disabled:
             return
         if self.busyCursor:
-            QtWidgets.QApplication.restoreOverrideCursor()
+            QtGui.QApplication.restoreOverrideCursor()
             
         if self._topDialog is not None:
             self._topDialog._removeSubDialog(self)
@@ -152,14 +148,14 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         # extract all child widgets and place into a new layout that we can add to
         if self._nestingReady is False:
             # top layout contains progress bars + cancel button at the bottom
-            self._topLayout = QtWidgets.QGridLayout()
+            self._topLayout = QtGui.QGridLayout()
             self.setLayout(self._topLayout)
             self._topLayout.setContentsMargins(0, 0, 0, 0)
             
             # A vbox to contain all progress bars
-            self.nestedVBox = QtWidgets.QWidget()
+            self.nestedVBox = QtGui.QWidget()
             self._topLayout.addWidget(self.nestedVBox, 0, 0, 1, 2)
-            self.nestedLayout = QtWidgets.QVBoxLayout()
+            self.nestedLayout = QtGui.QVBoxLayout()
             self.nestedVBox.setLayout(self.nestedLayout)
             
             # re-insert all widgets
@@ -180,10 +176,10 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         #   2. the cancel button
         
         if self._nestableWidgets is None:
-            widgets = [ch for ch in self.children() if isinstance(ch, QtWidgets.QWidget)]
-            label = [ch for ch in self.children() if isinstance(ch, QtWidgets.QLabel)][0]
-            bar = [ch for ch in self.children() if isinstance(ch, QtWidgets.QProgressBar)][0]
-            btn = [ch for ch in self.children() if isinstance(ch, QtWidgets.QPushButton)][0]
+            widgets = [ch for ch in self.children() if isinstance(ch, QtGui.QWidget)]
+            label = [ch for ch in self.children() if isinstance(ch, QtGui.QLabel)][0]
+            bar = [ch for ch in self.children() if isinstance(ch, QtGui.QProgressBar)][0]
+            btn = [ch for ch in self.children() if isinstance(ch, QtGui.QPushButton)][0]
             
             sw = ProgressWidget(label, bar)
             
@@ -195,62 +191,59 @@ class ProgressDialog(QtWidgets.QProgressDialog):
         if self._nestingReady:
             # don't let progress dialog manage widgets anymore.
             return
-        return super().resizeEvent(ev)
+        return QtGui.QProgressDialog.resizeEvent(self, ev)
 
     ## wrap all other functions to make sure they aren't being called from non-gui threads
     
     def setValue(self, val):
         if self.disabled:
             return
-        QtWidgets.QProgressDialog.setValue(self, val)
+        QtGui.QProgressDialog.setValue(self, val)
         
         # Qt docs say this should happen automatically, but that doesn't seem
         # to be the case.
-        if self.windowModality() == QtCore.Qt.WindowModality.WindowModal:
-            now = perf_counter()
-            if self._lastProcessEvents is None or (now - self._lastProcessEvents) > 0.2:
-                QtWidgets.QApplication.processEvents()
-                self._lastProcessEvents = now
+        if self.windowModality() == QtCore.Qt.WindowModal:
+            QtGui.QApplication.processEvents()
         
     def setLabelText(self, val):
         if self.disabled:
             return
-        QtWidgets.QProgressDialog.setLabelText(self, val)
+        QtGui.QProgressDialog.setLabelText(self, val)
     
     def setMaximum(self, val):
         if self.disabled:
             return
-        QtWidgets.QProgressDialog.setMaximum(self, val)
+        QtGui.QProgressDialog.setMaximum(self, val)
 
     def setMinimum(self, val):
         if self.disabled:
             return
-        QtWidgets.QProgressDialog.setMinimum(self, val)
+        QtGui.QProgressDialog.setMinimum(self, val)
         
     def wasCanceled(self):
         if self.disabled:
             return False
-        return QtWidgets.QProgressDialog.wasCanceled(self)
+        return QtGui.QProgressDialog.wasCanceled(self)
 
     def maximum(self):
         if self.disabled:
             return 0
-        return QtWidgets.QProgressDialog.maximum(self)
+        return QtGui.QProgressDialog.maximum(self)
 
     def minimum(self):
         if self.disabled:
             return 0
-        return QtWidgets.QProgressDialog.minimum(self)
+        return QtGui.QProgressDialog.minimum(self)
 
 
-class ProgressWidget(QtWidgets.QWidget):
+class ProgressWidget(QtGui.QWidget):
     """Container for a label + progress bar that also allows its child widgets
     to be hidden without changing size.
     """
     def __init__(self, label, bar):
-        QtWidgets.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
         self.hidden = False
-        self.layout = QtWidgets.QVBoxLayout()
+        self.layout = QtGui.QVBoxLayout()
         self.setLayout(self.layout)
         
         self.label = label
@@ -259,7 +252,7 @@ class ProgressWidget(QtWidgets.QWidget):
         self.layout.addWidget(bar)
         
     def eventFilter(self, obj, ev):
-        return ev.type() == QtCore.QEvent.Type.Paint
+        return ev.type() == QtCore.QEvent.Paint
     
     def hide(self):
         # hide label and bar, but continue occupying the same space in the layout

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Node import Node
 from .common import CtrlNode
 
@@ -41,10 +42,8 @@ class BinOpNode(CtrlNode):
                 try:
                     fn = getattr(args['A'], name)
                     break
-                except AttributeError as e:
+                except AttributeError:
                     pass
-            else:
-                raise e
         else:
             fn = getattr(args['A'], self.fn)
         out = fn(args['B'])
@@ -103,3 +102,4 @@ class FloorDivideNode(BinOpNode):
     def __init__(self, name):
         BinOpNode.__init__(self, name, '__floordiv__')
         
+

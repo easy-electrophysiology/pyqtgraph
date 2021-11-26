@@ -1,12 +1,13 @@
+# -*- coding: utf-8 -*-
 """
 PlotWidget.py -  Convenience class--GraphicsView widget displaying a single PlotItem
 Copyright 2010  Luke Campagnola
 Distributed under MIT/X11 license. See license.txt for more information.
 """
 
-from ..graphicsItems.PlotItem import *
-from ..Qt import QtCore, QtWidgets
+from ..Qt import QtCore, QtGui
 from .GraphicsView import *
+from ..graphicsItems.PlotItem import *
 
 __all__ = ['PlotWidget']
 class PlotWidget(GraphicsView):
@@ -49,7 +50,7 @@ class PlotWidget(GraphicsView):
         and all others are passed
         to :func:`PlotItem.__init__() <pyqtgraph.PlotItem.__init__>`."""
         GraphicsView.__init__(self, parent, background=background)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
+        self.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.enableMouse(False)
         if plotItem is None:
             self.plotItem = PlotItem(**kargs)

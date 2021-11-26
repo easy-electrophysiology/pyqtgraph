@@ -1,11 +1,13 @@
-import numpy as np
-
-from ... import ComboBox, PlotDataItem
-from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
-from ...Qt import QtCore, QtGui, QtWidgets
+# -*- coding: utf-8 -*-
 from ..Node import Node
-from .common import *
+import weakref
+from ...Qt import QtCore, QtGui
+from ...graphicsItems.ScatterPlotItem import ScatterPlotItem
+from ...graphicsItems.PlotCurveItem import PlotCurveItem
+from ... import PlotDataItem, ComboBox
 
+from .common import *
+import numpy as np
 
 class PlotWidgetNode(Node):
     """Connection to PlotWidget. Will plot arrays, metaarrays, and display event lists."""
@@ -63,7 +65,7 @@ class PlotWidgetNode(Node):
                         items.add(vid)
                     else:
                         # Add the item to the plot, or generate a new item if needed.
-                        if isinstance(val, QtWidgets.QGraphicsItem):
+                        if isinstance(val, QtGui.QGraphicsItem):
                             self.plot.addItem(val)
                             item = val
                         else:
@@ -207,12 +209,12 @@ class ScatterPlot(CtrlNode):
         self.item = ScatterPlotItem()
         self.keys = []
         
-        #self.ui = QtWidgets.QWidget()
-        #self.layout = QtWidgets.QGridLayout()
+        #self.ui = QtGui.QWidget()
+        #self.layout = QtGui.QGridLayout()
         #self.ui.setLayout(self.layout)
         
-        #self.xCombo = QtWidgets.QComboBox()
-        #self.yCombo = QtWidgets.QComboBox()
+        #self.xCombo = QtGui.QComboBox()
+        #self.yCombo = QtGui.QComboBox()
         
         
     

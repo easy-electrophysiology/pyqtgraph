@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of RemoteGraphicsView to improve performance in
 applications with heavy load. It works by starting a second process to handle 
@@ -10,12 +11,11 @@ between the two cases. IF you have a multi-core CPU, it should be obvious that t
 remote case is much faster.
 """
 
-from time import perf_counter
-
-import numpy as np
-
+import initExample ## Add path to library (just for examples; you do not need this)
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
+import pyqtgraph.widgets.RemoteGraphicsView
+import numpy as np
 
 app = pg.mkQApp()
 
@@ -24,12 +24,10 @@ pg.setConfigOptions(antialias=True)  ## this will be expensive for the local plo
 view.pg.setConfigOptions(antialias=True)  ## prettier plots at no cost to the main process! 
 view.setWindowTitle('pyqtgraph example: RemoteSpeedTest')
 
-app.aboutToQuit.connect(view.close)
-
-label = QtWidgets.QLabel()
-rcheck = QtWidgets.QCheckBox('plot remote')
+label = QtGui.QLabel()
+rcheck = QtGui.QCheckBox('plot remote')
 rcheck.setChecked(True)
-lcheck = QtWidgets.QCheckBox('plot local')
+lcheck = QtGui.QCheckBox('plot local')
 lplt = pg.PlotWidget()
 layout = pg.LayoutWidget()
 layout.addWidget(rcheck)
@@ -45,7 +43,7 @@ rplt = view.pg.PlotItem()
 rplt._setProxyOptions(deferGetattr=True)  ## speeds up access to rplt.plot
 view.setCentralItem(rplt)
 
-lastUpdate = perf_counter()
+lastUpdate = pg.ptime.time()
 avgFps = 0.0
 
 def update():
@@ -62,7 +60,7 @@ def update():
     if lcheck.isChecked():
         lplt.plot(data, clear=True)
         
-    now = perf_counter()
+    now = pg.ptime.time()
     fps = 1.0 / (now - lastUpdate)
     lastUpdate = now
     avgFps = avgFps * 0.8 + fps * 0.2
@@ -72,5 +70,10 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(0)
 
+
+
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

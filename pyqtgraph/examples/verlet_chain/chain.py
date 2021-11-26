@@ -1,9 +1,6 @@
-import time
-
-import numpy as np
-
 import pyqtgraph as pg
-
+import numpy as np
+import time
 from . import relax
 
 
@@ -70,7 +67,7 @@ class ChainSim(pg.QtCore.QObject):
     def update(self):
         # approximate physics with verlet integration
         
-        now = time.perf_counter()
+        now = pg.ptime.time()
         if self.lasttime is None:
             dt = 0
         else:
@@ -113,3 +110,4 @@ class ChainSim(pg.QtCore.QObject):
         self.relaxed.emit()
         
         
+

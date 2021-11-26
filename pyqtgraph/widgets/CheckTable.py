@@ -1,15 +1,16 @@
-from ..Qt import QtCore, QtWidgets
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui, QtCore
 from . import VerticalLabel
 
 __all__ = ['CheckTable']
 
-class CheckTable(QtWidgets.QWidget):
+class CheckTable(QtGui.QWidget):
     
     sigStateChanged = QtCore.Signal(object, object, object) # (row, col, state)
     
     def __init__(self, columns):
-        QtWidgets.QWidget.__init__(self)
-        self.layout = QtWidgets.QGridLayout()
+        QtGui.QWidget.__init__(self)
+        self.layout = QtGui.QGridLayout()
         self.layout.setSpacing(0)
         self.setLayout(self.layout)
         self.headers = []
@@ -35,13 +36,13 @@ class CheckTable(QtWidgets.QWidget):
                 self.addRow(r)
 
     def addRow(self, name):
-        label = QtWidgets.QLabel(name)
+        label = QtGui.QLabel(name)
         row = len(self.rowNames)+1
         self.layout.addWidget(label, row, 0)
         checks = []
         col = 1
         for c in self.columns:
-            check = QtWidgets.QCheckBox('')
+            check = QtGui.QCheckBox('')
             check.col = c
             check.row = name
             self.layout.addWidget(check, row, col)
@@ -61,7 +62,7 @@ class CheckTable(QtWidgets.QWidget):
         for w in self.rowWidgets[row]:
             w.setParent(None)
             #QtCore.QObject.disconnect(w, QtCore.SIGNAL('stateChanged(int)'), self.checkChanged)
-            if isinstance(w, QtWidgets.QCheckBox):
+            if isinstance(w, QtGui.QCheckBox):
                 w.stateChanged.disconnect(self.checkChanged)
         self.rowWidgets.pop(row)
         for i in range(row, len(self.rowNames)):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates adding a custom context menu to a GraphicsItem
 and extending the context menu of a ViewBox.
@@ -7,10 +8,11 @@ own context menu, and for the menus of its parent items to be automatically
 displayed as well. 
 
 """
-
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui
+import numpy as np
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: context menu')
@@ -65,7 +67,7 @@ class MenuBox(pg.GraphicsObject):
     
     # On right-click, raise the context menu
     def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.MouseButton.RightButton:
+        if ev.button() == QtCore.Qt.RightButton:
             if self.raiseContextMenu(ev):
                 ev.accept()
 
@@ -84,7 +86,7 @@ class MenuBox(pg.GraphicsObject):
     # a context menu that includes their parents' menus.
     def getContextMenus(self, event=None):
         if self.menu is None:
-            self.menu = QtWidgets.QMenu()
+            self.menu = QtGui.QMenu()
             self.menu.setTitle(self.name+ " options..")
             
             green = QtGui.QAction("Turn green", self.menu)
@@ -97,9 +99,9 @@ class MenuBox(pg.GraphicsObject):
             self.menu.addAction(blue)
             self.menu.green = blue
             
-            alpha = QtWidgets.QWidgetAction(self.menu)
-            alphaSlider = QtWidgets.QSlider()
-            alphaSlider.setOrientation(QtCore.Qt.Orientation.Horizontal)
+            alpha = QtGui.QWidgetAction(self.menu)
+            alphaSlider = QtGui.QSlider()
+            alphaSlider.setOrientation(QtCore.Qt.Horizontal)
             alphaSlider.setMaximum(255)
             alphaSlider.setValue(255)
             alphaSlider.valueChanged.connect(self.setAlpha)
@@ -131,7 +133,10 @@ view.addItem(box1)
 box2 = MenuBox("Menu Box #2")
 box2.setParentItem(box1)
 box2.setPos(5, 5)
-box2.setScale(0.2)
+box2.scale(0.2, 0.2)
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

@@ -1,28 +1,32 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 """
 ViewBox is the general-purpose graphical container that allows the user to 
 zoom / pan to inspect any area of a 2D coordinate system. 
 
-This unimaginative example demonstrates the construction of a ViewBox-based
+This unimaginative example demonstrates the constrution of a ViewBox-based
 plot area with axes, very similar to the way PlotItem is built.
 """
+
+
+## Add path to library (just for examples; you do not need this)
+import initExample
 
 ## This example uses a ViewBox to create a PlotWidget-like interface
 
 import numpy as np
-
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
 
-app = pg.mkQApp("ViewBox Example")
-mw = QtWidgets.QMainWindow()
+app = QtGui.QApplication([])
+mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: ViewBox')
 mw.show()
 mw.resize(800, 600)
 
 gv = pg.GraphicsView()
 mw.setCentralWidget(gv)
-l = QtWidgets.QGraphicsGridLayout()
+l = QtGui.QGraphicsGridLayout()
 l.setHorizontalSpacing(0)
 l.setVerticalSpacing(0)
 
@@ -32,9 +36,9 @@ p1 = pg.PlotDataItem()
 vb.addItem(p1)
 
 ## Just something to play with inside the ViewBox
-class movableRect(QtWidgets.QGraphicsRectItem):
+class movableRect(QtGui.QGraphicsRectItem):
     def __init__(self, *args):
-        QtWidgets.QGraphicsRectItem.__init__(self, *args)
+        QtGui.QGraphicsRectItem.__init__(self, *args)
         self.setAcceptHoverEvents(True)
     def hoverEnterEvent(self, ev):
         self.savedPen = self.pen()
@@ -44,7 +48,7 @@ class movableRect(QtWidgets.QGraphicsRectItem):
         self.setPen(self.savedPen)
         ev.ignore()
     def mousePressEvent(self, ev):
-        if ev.button() == QtCore.Qt.MouseButton.LeftButton:
+        if ev.button() == QtCore.Qt.LeftButton:
             ev.accept()
             self.pressDelta = self.mapToParent(ev.pos()) - self.pos()
         else:
@@ -89,5 +93,8 @@ t = QtCore.QTimer()
 t.timeout.connect(updateData)
 t.start(50)
 
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

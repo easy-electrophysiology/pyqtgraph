@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """This module installs a wrapper around sys.excepthook which allows multiple
 new exception handlers to be registered. 
 
@@ -14,12 +15,9 @@ The module also provides a callback mechanism allowing others to respond
 to exceptions.
 """
 
-import sys
-import time
-
+import sys, time
 #from lib.Manager import logMsg
 import traceback
-
 #from log import *
 
 #logging = False
@@ -103,3 +101,6 @@ class ExceptionHandler(object):
 if not (hasattr(sys.excepthook, 'implements') and sys.excepthook.implements('ExceptionHandler')):
     original_excepthook = sys.excepthook
     sys.excepthook = ExceptionHandler()
+
+
+

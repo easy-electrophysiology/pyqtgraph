@@ -1,22 +1,23 @@
+# -*- coding: utf-8 -*-
 """
 Displays an interactive Koch fractal
 """
+import initExample ## Add path to library (just for examples; you do not need this)
 
 from functools import reduce
-
+import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
 
-import pyqtgraph as pg
-
-app = pg.mkQApp("Fractal Example")
+app = QtGui.QApplication([])
 
 # Set up UI widgets
-win = pg.QtWidgets.QWidget()
+win = pg.QtGui.QWidget()
 win.setWindowTitle('pyqtgraph example: fractal demo')
-layout = pg.QtWidgets.QGridLayout()
+layout = pg.QtGui.QGridLayout()
 win.setLayout(layout)
 layout.setContentsMargins(0, 0, 0, 0)
-depthLabel = pg.QtWidgets.QLabel('fractal depth:')
+depthLabel = pg.QtGui.QLabel('fractal depth:')
 layout.addWidget(depthLabel, 0, 0)
 depthSpin = pg.SpinBox(value=5, step=1, bounds=[1, 10], delay=0, int=True)
 depthSpin.resize(100, 20)
@@ -105,5 +106,10 @@ depthSpin.valueChanged.connect(update)
 # Initialize
 update()
 
+
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
+    

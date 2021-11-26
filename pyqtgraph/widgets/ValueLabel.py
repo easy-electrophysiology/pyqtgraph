@@ -1,17 +1,16 @@
-from time import perf_counter
-
+from ..Qt import QtCore, QtGui
+from ..ptime import time
 from .. import functions as fn
-from ..Qt import QtWidgets
 
 __all__ = ['ValueLabel']
 
-class ValueLabel(QtWidgets.QLabel):
+class ValueLabel(QtGui.QLabel):
     """
     QLabel specifically for displaying numerical values.
     Extends QLabel adding some extra functionality:
 
-      - displaying units with si prefix
-      - built-in exponential averaging
+    - displaying units with si prefix
+    - built-in exponential averaging 
     """
     
     def __init__(self, parent=None, suffix='', siPrefix=False, averageTime=0, formatStr=None):
@@ -29,7 +28,7 @@ class ValueLabel(QtWidgets.QLabel):
                             This option is not compatible with siPrefix
         ==============      ==================================================================================
         """
-        QtWidgets.QLabel.__init__(self, parent)
+        QtGui.QLabel.__init__(self, parent)
         self.values = []
         self.averageTime = averageTime ## no averaging by default
         self.suffix = suffix
@@ -39,7 +38,7 @@ class ValueLabel(QtWidgets.QLabel):
         self.formatStr = formatStr
     
     def setValue(self, value):
-        now = perf_counter()
+        now = time()
         self.values.append((now, value))
         cutoff = now - self.averageTime
         while len(self.values) > 0 and self.values[0][0] < cutoff:
@@ -59,7 +58,7 @@ class ValueLabel(QtWidgets.QLabel):
         
     def paintEvent(self, ev):
         self.setText(self.generateText())
-        return super().paintEvent(ev)
+        return QtGui.QLabel.paintEvent(self, ev)
         
     def generateText(self):
         if len(self.values) == 0:

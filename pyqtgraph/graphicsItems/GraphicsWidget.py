@@ -1,19 +1,20 @@
-from ..Qt import QtGui, QtWidgets
+from ..Qt import QtGui, QtCore  
+from ..GraphicsScene import GraphicsScene
 from .GraphicsItem import GraphicsItem
 
 __all__ = ['GraphicsWidget']
 
-class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
+class GraphicsWidget(GraphicsItem, QtGui.QGraphicsWidget):
     
-    _qtBaseClass = QtWidgets.QGraphicsWidget
+    _qtBaseClass = QtGui.QGraphicsWidget
     def __init__(self, *args, **kargs):
         """
-        **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtWidgets.QGraphicsWidget`
+        **Bases:** :class:`GraphicsItem <pyqtgraph.GraphicsItem>`, :class:`QtGui.QGraphicsWidget`
         
         Extends QGraphicsWidget with several helpful methods and workarounds for PyQt bugs. 
         Most of the extra functionality is inherited from :class:`GraphicsItem <pyqtgraph.GraphicsItem>`.
         """
-        QtWidgets.QGraphicsWidget.__init__(self, *args, **kargs)
+        QtGui.QGraphicsWidget.__init__(self, *args, **kargs)
         GraphicsItem.__init__(self)
         
         ## done by GraphicsItem init
@@ -22,7 +23,7 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
     # Removed due to https://bugreports.qt-project.org/browse/PYSIDE-86
     #def itemChange(self, change, value):
         ## BEWARE: Calling QGraphicsWidget.itemChange can lead to crashing!
-        ##ret = QtWidgets.QGraphicsWidget.itemChange(self, change, value)  ## segv occurs here
+        ##ret = QtGui.QGraphicsWidget.itemChange(self, change, value)  ## segv occurs here
         ## The default behavior is just to return the value argument, so we'll do that
         ## without calling the original method.
         #ret = value
@@ -54,3 +55,5 @@ class GraphicsWidget(GraphicsItem, QtWidgets.QGraphicsWidget):
         p.addRect(self.boundingRect())
         #print "shape:", p.boundingRect()
         return p
+
+

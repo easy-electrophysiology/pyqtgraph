@@ -1,20 +1,17 @@
-import collections
-import os
-import sys
-from time import perf_counter
-
 import numpy as np
-
+import collections
+import sys, os
 import pyqtgraph as pg
-from pyqtgraph import configfile
+from pyqtgraph.Qt import QtGui, QtCore
 from pyqtgraph.parametertree import Parameter, ParameterTree
 from pyqtgraph.parametertree import types as pTypes
-from pyqtgraph.Qt import QtCore, QtGui, QtWidgets
+import pyqtgraph.configfile
+from pyqtgraph.python2_3 import xrange
 
 
-class RelativityGUI(QtWidgets.QWidget):
+class RelativityGUI(QtGui.QWidget):
     def __init__(self):
-        QtWidgets.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
         
         self.animations = []
         self.animTimer = QtCore.QTimer()
@@ -28,10 +25,10 @@ class RelativityGUI(QtWidgets.QWidget):
         self.objectGroup = ObjectGroupParam()
         
         self.params = Parameter.create(name='params', type='group', children=[
-            dict(name='Load Preset..', type='list', limits=[]),
-            #dict(name='Unit System', type='list', limits=['', 'MKS']),
+            dict(name='Load Preset..', type='list', values=[]),
+            #dict(name='Unit System', type='list', values=['', 'MKS']),
             dict(name='Duration', type='float', value=10.0, step=0.1, limits=[0.1, None]),
-            dict(name='Reference Frame', type='list', limits=[]),
+            dict(name='Reference Frame', type='list', values=[]),
             dict(name='Animate', type='bool', value=True),
             dict(name='Animation Speed', type='float', value=1.0, dec=True, step=0.1, limits=[0.0001, None]),
             dict(name='Recalculate Worldlines', type='action'),
@@ -56,18 +53,18 @@ class RelativityGUI(QtWidgets.QWidget):
         
         
     def setupGUI(self):
-        self.layout = QtWidgets.QVBoxLayout()
+        self.layout = QtGui.QVBoxLayout()
         self.layout.setContentsMargins(0,0,0,0)
         self.setLayout(self.layout)
-        self.splitter = QtWidgets.QSplitter()
-        self.splitter.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.splitter = QtGui.QSplitter()
+        self.splitter.setOrientation(QtCore.Qt.Horizontal)
         self.layout.addWidget(self.splitter)
         
         self.tree = ParameterTree(showHeader=False)
         self.splitter.addWidget(self.tree)
         
-        self.splitter2 = QtWidgets.QSplitter()
-        self.splitter2.setOrientation(QtCore.Qt.Orientation.Vertical)
+        self.splitter2 = QtGui.QSplitter()
+        self.splitter2.setOrientation(QtCore.Qt.Vertical)
         self.splitter.addWidget(self.splitter2)
         
         self.worldlinePlots = pg.GraphicsLayoutWidget()
@@ -133,13 +130,13 @@ class RelativityGUI(QtWidgets.QWidget):
 
     def setAnimation(self, a):
         if a:
-            self.lastAnimTime = perf_counter()
-            self.animTimer.start(int(self.animDt*1000))
+            self.lastAnimTime = pg.ptime.time()
+            self.animTimer.start(self.animDt*1000)
         else:
             self.animTimer.stop()
             
     def stepAnimation(self):
-        now = perf_counter()
+        now = pg.ptime.time()
         dt = (now-self.lastAnimTime) * self.params['Animation Speed']
         self.lastAnimTime = now
         self.animTime += dt
@@ -162,21 +159,21 @@ class RelativityGUI(QtWidgets.QWidget):
         self.setAnimation(self.params['Animate'])
         
     def save(self):
-        filename = pg.QtWidgets.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
+        filename = pg.QtGui.QFileDialog.getSaveFileName(self, "Save State..", "untitled.cfg", "Config Files (*.cfg)")
         if isinstance(filename, tuple):
             filename = filename[0]  # Qt4/5 API difference
         if filename == '':
             return
         state = self.params.saveState()
-        configfile.writeConfigFile(state, str(filename)) 
+        pg.configfile.writeConfigFile(state, str(filename)) 
         
     def load(self):
-        filename = pg.QtWidgets.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
+        filename = pg.QtGui.QFileDialog.getOpenFileName(self, "Save State..", "", "Config Files (*.cfg)")
         if isinstance(filename, tuple):
             filename = filename[0]  # Qt4/5 API difference
         if filename == '':
             return
-        state = configfile.readConfigFile(str(filename)) 
+        state = pg.configfile.readConfigFile(str(filename)) 
         self.loadState(state)
         
     def loadPreset(self, param, preset):
@@ -184,7 +181,7 @@ class RelativityGUI(QtWidgets.QWidget):
             return
         path = os.path.abspath(os.path.dirname(__file__))
         fn = os.path.join(path, 'presets', preset+".cfg")
-        state = configfile.readConfigFile(fn)
+        state = pg.configfile.readConfigFile(fn)
         self.loadState(state)
         
     def loadState(self, state):
@@ -521,7 +518,7 @@ class Simulation:
         dt = self.dt
         tVals = np.linspace(0, dt*(nPts-1), nPts)
         for cl in self.clocks.values():
-            for i in range(1,nPts):
+            for i in xrange(1,nPts):
                 nextT = tVals[i]
                 while True:
                     tau1, tau2 = cl.accelLimits()
@@ -567,7 +564,7 @@ class Simulation:
         ## These are the set of proper times (in the reference frame) that will be simulated
         ptVals = np.linspace(ref.pt, ref.pt + dt*(nPts-1), nPts)
         
-        for i in range(1,nPts):
+        for i in xrange(1,nPts):
                 
             ## step reference clock ahead one time step in its proper time
             nextPt = ptVals[i]  ## this is where (when) we want to end up
@@ -657,6 +654,15 @@ class Animation(pg.ItemGroup):
             item = ClockItem(cl)
             self.addItem(item)
             self.items[name] = item
+            
+        #self.timer = timer
+        #self.timer.timeout.connect(self.step)
+        
+    #def run(self, run):
+        #if not run:
+            #self.timer.stop()
+        #else:
+            #self.timer.start(self.dt)
         
     def restart(self):
         for cl in self.items.values():
@@ -671,15 +677,14 @@ class ClockItem(pg.ItemGroup):
     def __init__(self, clock):
         pg.ItemGroup.__init__(self)
         self.size = clock.size
-        self.item = QtWidgets.QGraphicsEllipseItem(QtCore.QRectF(0, 0, self.size, self.size))
-        tr = QtGui.QTransform.fromTranslate(-self.size*0.5, -self.size*0.5)
-        self.item.setTransform(tr)
+        self.item = QtGui.QGraphicsEllipseItem(QtCore.QRectF(0, 0, self.size, self.size))
+        self.item.translate(-self.size*0.5, -self.size*0.5)
         self.item.setPen(pg.mkPen(100,100,100))
         self.item.setBrush(clock.brush)
-        self.hand = QtWidgets.QGraphicsLineItem(0, 0, 0, self.size*0.5)
+        self.hand = QtGui.QGraphicsLineItem(0, 0, 0, self.size*0.5)
         self.hand.setPen(pg.mkPen('w'))
         self.hand.setZValue(10)
-        self.flare = QtWidgets.QGraphicsPolygonItem(QtGui.QPolygonF([
+        self.flare = QtGui.QGraphicsPolygonItem(QtGui.QPolygonF([
             QtCore.QPointF(0, -self.size*0.25),
             QtCore.QPointF(0, self.size*0.25),
             QtCore.QPointF(self.size*1.5, 0),
@@ -717,19 +722,19 @@ class ClockItem(pg.ItemGroup):
         t = data['pt'][self.i]
         self.hand.setRotation(-0.25 * t * 360.)
         
+        self.resetTransform()
         v = data['v'][self.i]
         gam = (1.0 - v**2)**0.5
-        self.setTransform(QtGui.QTransform.fromScale(gam, 1.0))
+        self.scale(gam, 1.0)
         
         f = data['f'][self.i]
-        tr = QtGui.QTransform()
+        self.flare.resetTransform()
         if f < 0:
-            tr.translate(self.size*0.4, 0)
+            self.flare.translate(self.size*0.4, 0)
         else:
-            tr.translate(-self.size*0.4, 0)
+            self.flare.translate(-self.size*0.4, 0)
         
-        tr.scale(-f * (0.5+np.random.random()*0.1), 1.0)
-        self.flare.setTransform(tr)
+        self.flare.scale(-f * (0.5+np.random.random()*0.1), 1.0)
         
         if self._spaceline is not None:
             self._spaceline.setPos(pg.Point(data['x'][self.i], data['t'][self.i]))
@@ -753,7 +758,7 @@ class ClockItem(pg.ItemGroup):
         #pass
 
 if __name__ == '__main__':
-    app = pg.mkQApp()
+    pg.mkQApp()
     #import pyqtgraph.console
     #cw = pyqtgraph.console.ConsoleWidget()
     #cw.show()
@@ -762,5 +767,10 @@ if __name__ == '__main__':
     win.setWindowTitle("Relativity!")
     win.show()
     win.resize(1100,700)
+    
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()
+    
+    
+    #win.params.param('Objects').restoreState(state, removeChildren=False)
 
-    pg.exec()

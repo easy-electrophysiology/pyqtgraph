@@ -1,19 +1,21 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates use of GLScatterPlotItem with rapidly-updating plots.
+
 """
 
+## Add path to library (just for examples; you do not need this)
+import initExample
+
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph.opengl as gl
 import numpy as np
 
-import pyqtgraph as pg
-import pyqtgraph.opengl as gl
-from pyqtgraph import functions as fn
-from pyqtgraph.Qt import QtCore
-
-app = pg.mkQApp("GLScatterPlotItem Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
+w.opts['distance'] = 20
 w.show()
 w.setWindowTitle('pyqtgraph example: GLScatterPlotItem')
-w.setCameraPosition(distance=20)
 
 g = gl.GLGridItem()
 w.addItem(g)
@@ -81,10 +83,10 @@ def update():
     global phase, sp2, d2
     s = -np.cos(d2*2+phase)
     color = np.empty((len(d2),4), dtype=np.float32)
-    color[:,3] = fn.clip_array(s * 0.1, 0., 1.)
-    color[:,0] = fn.clip_array(s * 3.0, 0., 1.)
-    color[:,1] = fn.clip_array(s * 1.0, 0., 1.)
-    color[:,2] = fn.clip_array(s ** 3, 0., 1.)
+    color[:,3] = np.clip(s * 0.1, 0, 1)
+    color[:,0] = np.clip(s * 3.0, 0, 1)
+    color[:,1] = np.clip(s * 1.0, 0, 1)
+    color[:,2] = np.clip(s ** 3, 0, 1)
     sp2.setData(color=color)
     phase -= 0.1
     
@@ -103,5 +105,9 @@ t = QtCore.QTimer()
 t.timeout.connect(update)
 t.start(50)
 
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

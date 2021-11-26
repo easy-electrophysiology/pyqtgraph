@@ -1,9 +1,9 @@
+# -*- coding: utf-8 -*-
 import numpy as np
-
+from ..Qt import QtGui, QtCore
+from ..python2_3 import asUnicode, basestring
 from .. import metaarray
-from ..Qt import QtCore, QtGui, QtWidgets
 
-translate = QtCore.QCoreApplication.translate
 
 __all__ = ['TableWidget']
 
@@ -26,7 +26,7 @@ def _defersort(fn):
     return defersort
 
 
-class TableWidget(QtWidgets.QTableWidget):
+class TableWidget(QtGui.QTableWidget):
     """Extends QTableWidget with some useful functions for automatic data handling
     and copy / export context menu. Can automatically format and display a variety
     of data types (see :func:`setData() <pyqtgraph.TableWidget.setData>` for more
@@ -49,13 +49,13 @@ class TableWidget(QtWidgets.QTableWidget):
         ===================== =================================================
         """
         
-        QtWidgets.QTableWidget.__init__(self, *args)
+        QtGui.QTableWidget.__init__(self, *args)
         
         self.itemClass = TableWidgetItem
         
-        self.setVerticalScrollMode(self.ScrollMode.ScrollPerPixel)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ContiguousSelection)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Preferred, QtWidgets.QSizePolicy.Policy.Preferred)
+        self.setVerticalScrollMode(self.ScrollPerPixel)
+        self.setSelectionMode(QtGui.QAbstractItemView.ContiguousSelection)
+        self.setSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         self.clear()
         
         kwds.setdefault('sortable', True)
@@ -64,7 +64,7 @@ class TableWidget(QtWidgets.QTableWidget):
         self.setSortingEnabled(kwds.pop('sortable'))
         
         if len(kwds) > 0:
-            raise TypeError("Invalid keyword arguments '%s'" % list(kwds.keys()))
+            raise TypeError("Invalid keyword arguments '%s'" % kwds.keys())
         
         self._sorting = None  # used when temporarily disabling sorting
         
@@ -73,15 +73,15 @@ class TableWidget(QtWidgets.QTableWidget):
         
         self.itemChanged.connect(self.handleItemChanged)
         
-        self.contextMenu = QtWidgets.QMenu()
-        self.contextMenu.addAction(translate("TableWidget", 'Copy Selection')).triggered.connect(self.copySel)
-        self.contextMenu.addAction(translate("TableWidget", 'Copy All')).triggered.connect(self.copyAll)
-        self.contextMenu.addAction(translate("TableWidget", 'Save Selection')).triggered.connect(self.saveSel)
-        self.contextMenu.addAction(translate("TableWidget", 'Save All')).triggered.connect(self.saveAll)
+        self.contextMenu = QtGui.QMenu()
+        self.contextMenu.addAction('Copy Selection').triggered.connect(self.copySel)
+        self.contextMenu.addAction('Copy All').triggered.connect(self.copyAll)
+        self.contextMenu.addAction('Save Selection').triggered.connect(self.saveSel)
+        self.contextMenu.addAction('Save All').triggered.connect(self.saveAll)
         
     def clear(self):
         """Clear all contents from the table."""
-        QtWidgets.QTableWidget.clear(self)
+        QtGui.QTableWidget.clear(self)
         self.verticalHeadersSet = False
         self.horizontalHeadersSet = False
         self.items = []
@@ -93,12 +93,12 @@ class TableWidget(QtWidgets.QTableWidget):
         """Set the data displayed in the table.
         Allowed formats are:
         
-          * numpy arrays
-          * numpy record arrays
-          * metaarrays
-          * list-of-lists  [[1,2,3], [4,5,6]]
-          * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
-          * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
+        * numpy arrays
+        * numpy record arrays 
+        * metaarrays
+        * list-of-lists  [[1,2,3], [4,5,6]]
+        * dict-of-lists  {'x': [1,2,3], 'y': [4,5,6]}
+        * list-of-dicts  [{'x': 1, 'y': 4}, {'x': 2, 'y': 5}, ...]
         """
         self.clear()
         self.appendData(data)
@@ -148,7 +148,7 @@ class TableWidget(QtWidgets.QTableWidget):
             
         if (self._sorting and self.horizontalHeadersSet and 
             self.horizontalHeader().sortIndicatorSection() >= self.columnCount()):
-            self.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
+            self.sortByColumn(0, QtCore.Qt.AscendingOrder)
     
     def setEditable(self, editable=True):
         self.editable = editable
@@ -169,7 +169,7 @@ class TableWidget(QtWidgets.QTableWidget):
         Added in version 0.9.9.
         
         """
-        if format is not None and not isinstance(format, str) and not callable(format):
+        if format is not None and not isinstance(format, basestring) and not callable(format):
             raise ValueError("Format argument must string, callable, or None. (got %s)" % format)
         
         self._formats[column] = format
@@ -202,19 +202,19 @@ class TableWidget(QtWidgets.QTableWidget):
         if isinstance(data, list) or isinstance(data, tuple):
             return lambda d: d.__iter__(), None
         elif isinstance(data, dict):
-            return lambda d: iter(d.values()), list(map(str, data.keys()))
+            return lambda d: iter(d.values()), list(map(asUnicode, data.keys()))
         elif (hasattr(data, 'implements') and data.implements('MetaArray')):
             if data.axisHasColumns(0):
-                header = [str(data.columnName(0, i)) for i in range(data.shape[0])]
+                header = [asUnicode(data.columnName(0, i)) for i in range(data.shape[0])]
             elif data.axisHasValues(0):
-                header = list(map(str, data.xvals(0)))
+                header = list(map(asUnicode, data.xvals(0)))
             else:
                 header = None
             return self.iterFirstAxis, header
         elif isinstance(data, np.ndarray):
             return self.iterFirstAxis, None
         elif isinstance(data, np.void):
-            return self.iterate, list(map(str, data.dtype.names))
+            return self.iterate, list(map(asUnicode, data.dtype.names))
         elif data is None:
             return (None,None)
         elif np.isscalar(data):
@@ -310,22 +310,22 @@ class TableWidget(QtWidgets.QTableWidget):
         if self.horizontalHeadersSet:
             row = []
             if self.verticalHeadersSet:
-                row.append('')
+                row.append(asUnicode(''))
             
             for c in columns:
-                row.append(self.horizontalHeaderItem(c).text())
+                row.append(asUnicode(self.horizontalHeaderItem(c).text()))
             data.append(row)
         
         for r in rows:
             row = []
             if self.verticalHeadersSet:
-                row.append(self.verticalHeaderItem(r).text())
+                row.append(asUnicode(self.verticalHeaderItem(r).text()))
             for c in columns:
                 item = self.item(r, c)
                 if item is not None:
-                    row.append(str(item.value))
+                    row.append(asUnicode(item.value))
                 else:
-                    row.append('')
+                    row.append(asUnicode(''))
             data.append(row)
             
         s = ''
@@ -335,11 +335,11 @@ class TableWidget(QtWidgets.QTableWidget):
 
     def copySel(self):
         """Copy selected data to clipboard."""
-        QtWidgets.QApplication.clipboard().setText(self.serialize(useSelection=True))
+        QtGui.QApplication.clipboard().setText(self.serialize(useSelection=True))
 
     def copyAll(self):
         """Copy all data to clipboard."""
-        QtWidgets.QApplication.clipboard().setText(self.serialize(useSelection=False))
+        QtGui.QApplication.clipboard().setText(self.serialize(useSelection=False))
 
     def saveSel(self):
         """Save selected data to file."""
@@ -350,12 +350,7 @@ class TableWidget(QtWidgets.QTableWidget):
         self.save(self.serialize(useSelection=False))
 
     def save(self, data):
-        fileName = QtWidgets.QFileDialog.getSaveFileName(
-            self,
-            f"{translate('TableWidget', 'Save As')}...",
-            "",
-            f"{translate('TableWidget', 'Tab-separated values')} (*.tsv)"
-        )
+        fileName = QtGui.QFileDialog.getSaveFileName(self, "Save As..", "", "Tab-separated values (*.tsv)")
         if isinstance(fileName, tuple):
             fileName = fileName[0]  # Qt4/5 API difference
         if fileName == '':
@@ -367,25 +362,25 @@ class TableWidget(QtWidgets.QTableWidget):
         self.contextMenu.popup(ev.globalPos())
         
     def keyPressEvent(self, ev):
-        if ev.matches(QtGui.QKeySequence.StandardKey.Copy):
+        if ev.key() == QtCore.Qt.Key_C and ev.modifiers() == QtCore.Qt.ControlModifier:
             ev.accept()
             self.copySel()
         else:
-            super().keyPressEvent(ev)
+            QtGui.QTableWidget.keyPressEvent(self, ev)
 
     def handleItemChanged(self, item):
         item.itemChanged()
 
 
-class TableWidgetItem(QtWidgets.QTableWidgetItem):
+class TableWidgetItem(QtGui.QTableWidgetItem):
     def __init__(self, val, index, format=None):
-        QtWidgets.QTableWidgetItem.__init__(self, '')
+        QtGui.QTableWidgetItem.__init__(self, '')
         self._blockValueChange = False
         self._format = None
         self._defaultFormat = '%0.3g'
         self.sortMode = 'value'
         self.index = index
-        flags = QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled
+        flags = QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
         self.setFlags(flags)
         self.setValue(val)
         self.setFormat(format)
@@ -395,9 +390,9 @@ class TableWidgetItem(QtWidgets.QTableWidgetItem):
         Set whether this item is user-editable.
         """
         if editable:
-            self.setFlags(self.flags() | QtCore.Qt.ItemFlag.ItemIsEditable)
+            self.setFlags(self.flags() | QtCore.Qt.ItemIsEditable)
         else:
-            self.setFlags(self.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
+            self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
             
     def setSortMode(self, mode):
         """
@@ -426,7 +421,7 @@ class TableWidgetItem(QtWidgets.QTableWidgetItem):
         
         Added in version 0.9.9.
         """
-        if fmt is not None and not isinstance(fmt, str) and not callable(fmt):
+        if fmt is not None and not isinstance(fmt, basestring) and not callable(fmt):
             raise ValueError("Format argument must string, callable, or None. (got %s)" % fmt)
         self._format = fmt
         self._updateText()
@@ -472,7 +467,7 @@ class TableWidgetItem(QtWidgets.QTableWidgetItem):
             else:
                 return self._format % self.value
         else:
-            return str(self.value)
+            return asUnicode(self.value)
 
     def __lt__(self, other):
         if self.sortMode == 'index' and hasattr(other, 'index'):
@@ -484,8 +479,8 @@ class TableWidgetItem(QtWidgets.QTableWidgetItem):
 
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication([])
-    win = QtWidgets.QMainWindow()
+    app = QtGui.QApplication([])
+    win = QtGui.QMainWindow()
     t = TableWidget()
     win.setCentralWidget(t)
     win.resize(800,600)

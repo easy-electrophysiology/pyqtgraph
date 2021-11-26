@@ -1,12 +1,12 @@
+# -*- coding: utf-8 -*-
 """
 Various methods of drawing scrolling plots.
 """
-
-from time import perf_counter
-
-import numpy as np
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
+import numpy as np
 
 win = pg.GraphicsLayoutWidget(show=True)
 win.setWindowTitle('pyqtgraph example: Scrolling Plots')
@@ -67,7 +67,7 @@ def update2():
 chunkSize = 100
 # Remove chunks after we have 10
 maxChunks = 10
-startTime = perf_counter()
+startTime = pg.ptime.time()
 win.nextRow()
 p5 = win.addPlot(colspan=2)
 p5.setLabel('bottom', 'Time', 's')
@@ -78,7 +78,7 @@ ptr5 = 0
 
 def update3():
     global p5, data5, ptr5, curves
-    now = perf_counter()
+    now = pg.ptime.time()
     for c in curves:
         c.setPos(-(now-startTime), 0)
     
@@ -109,5 +109,10 @@ timer = pg.QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(50)
 
+
+
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

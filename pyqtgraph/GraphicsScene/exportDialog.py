@@ -1,36 +1,34 @@
-import importlib
-
+from ..Qt import QtCore, QtGui, QT_LIB
 from .. import exporters as exporters
 from .. import functions as fn
-from ..graphicsItems.PlotItem import PlotItem
 from ..graphicsItems.ViewBox import ViewBox
-from ..Qt import QT_LIB, QtCore, QtWidgets
+from ..graphicsItems.PlotItem import PlotItem
 
-ui_template = importlib.import_module(
-    f'.exportDialogTemplate_{QT_LIB.lower()}', package=__package__)
+if QT_LIB == 'PySide':
+    from . import exportDialogTemplate_pyside as exportDialogTemplate
+elif QT_LIB == 'PySide2':
+    from . import exportDialogTemplate_pyside2 as exportDialogTemplate
+elif QT_LIB == 'PyQt5':
+    from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
+else:
+    from . import exportDialogTemplate_pyqt as exportDialogTemplate
 
 
-class FormatExportListWidgetItem(QtWidgets.QListWidgetItem):
-    def __init__(self, expClass, *args, **kwargs):
-        QtWidgets.QListWidgetItem.__init__(self, *args, **kwargs)
-        self.expClass = expClass
-
-
-class ExportDialog(QtWidgets.QWidget):
+class ExportDialog(QtGui.QWidget):
     def __init__(self, scene):
-        QtWidgets.QWidget.__init__(self)
+        QtGui.QWidget.__init__(self)
         self.setVisible(False)
         self.setWindowTitle("Export")
         self.shown = False
         self.currentExporter = None
         self.scene = scene
 
-        self.selectBox = QtWidgets.QGraphicsRectItem()
-        self.selectBox.setPen(fn.mkPen('y', width=3, style=QtCore.Qt.PenStyle.DashLine))
+        self.selectBox = QtGui.QGraphicsRectItem()
+        self.selectBox.setPen(fn.mkPen('y', width=3, style=QtCore.Qt.DashLine))
         self.selectBox.hide()
         self.scene.addItem(self.selectBox)
         
-        self.ui = ui_template.Ui_Form()
+        self.ui = exportDialogTemplate.Ui_Form()
         self.ui.setupUi(self)
         
         self.ui.closeBtn.clicked.connect(self.close)
@@ -61,7 +59,7 @@ class ExportDialog(QtWidgets.QWidget):
         
     def updateItemList(self, select=None):
         self.ui.itemTree.clear()
-        si = QtWidgets.QTreeWidgetItem(["Entire Scene"])
+        si = QtGui.QTreeWidgetItem(["Entire Scene"])
         si.gitem = self.scene
         self.ui.itemTree.addTopLevelItem(si)
         self.ui.itemTree.setCurrentItem(si)
@@ -73,9 +71,9 @@ class ExportDialog(QtWidgets.QWidget):
     def updateItemTree(self, item, treeItem, select=None):
         si = None
         if isinstance(item, ViewBox):
-            si = QtWidgets.QTreeWidgetItem(['ViewBox'])
+            si = QtGui.QTreeWidgetItem(['ViewBox'])
         elif isinstance(item, PlotItem):
-            si = QtWidgets.QTreeWidgetItem(['Plot'])
+            si = QtGui.QTreeWidgetItem(['Plot'])
             
         if si is not None:
             si.gitem = item
@@ -101,14 +99,16 @@ class ExportDialog(QtWidgets.QWidget):
         
     def updateFormatList(self):
         current = self.ui.formatList.currentItem()
-
+        if current is not None:
+            current = str(current.text())
         self.ui.formatList.clear()
+        self.exporterClasses = {}
         gotCurrent = False
         for exp in exporters.listExporters():
-            item = FormatExportListWidgetItem(exp, QtCore.QCoreApplication.translate('Exporter', exp.Name))
-            self.ui.formatList.addItem(item)
-            if item == current:
-                self.ui.formatList.setCurrentRow(self.ui.formatList.count() - 1)
+            self.ui.formatList.addItem(exp.Name)
+            self.exporterClasses[exp.Name] = exp
+            if exp.Name == current:
+                self.ui.formatList.setCurrentRow(self.ui.formatList.count()-1)
                 gotCurrent = True
                 
         if not gotCurrent:
@@ -119,7 +119,7 @@ class ExportDialog(QtWidgets.QWidget):
             self.currentExporter = None
             self.ui.paramTree.clear()
             return
-        expClass = item.expClass
+        expClass = self.exporterClasses[str(item.text())]
         exp = expClass(item=self.ui.itemTree.currentItem().gitem)
 
         params = exp.parameters()
@@ -145,4 +145,4 @@ class ExportDialog(QtWidgets.QWidget):
 
     def closeEvent(self, event):
         self.close()
-        super().closeEvent(event)
+        QtGui.QWidget.closeEvent(self, event)

@@ -1,17 +1,12 @@
-__all__ = ["CtrlNode", "PlottingCtrlNode", "metaArrayWrapper"]
-
-import numpy as np
-
-from ...Qt import QtCore, QtWidgets
-
+# -*- coding: utf-8 -*-
+from ...Qt import QtCore, QtGui
+from ...widgets.SpinBox import SpinBox
 #from ...SignalProxy import SignalProxy
 from ...WidgetGroup import WidgetGroup
-from ...widgets.ColorButton import ColorButton
-from ...widgets.SpinBox import SpinBox
-
 #from ColorMapper import ColorMapper
 from ..Node import Node
-
+import numpy as np
+from ...widgets.ColorButton import ColorButton
 try:
     import metaarray
     HAVE_METAARRAY = True
@@ -21,8 +16,8 @@ except:
 
 def generateUi(opts):
     """Convenience function for generating common UI types"""
-    widget = QtWidgets.QWidget()
-    l = QtWidgets.QFormLayout()
+    widget = QtGui.QWidget()
+    l = QtGui.QFormLayout()
     l.setSpacing(0)
     widget.setLayout(l)
     ctrls = {}
@@ -41,7 +36,7 @@ def generateUi(opts):
         tip = o.pop('tip', None)
 
         if t == 'intSpin':
-            w = QtWidgets.QSpinBox()
+            w = QtGui.QSpinBox()
             if 'max' in o:
                 w.setMaximum(o['max'])
             if 'min' in o:
@@ -49,7 +44,7 @@ def generateUi(opts):
             if 'value' in o:
                 w.setValue(o['value'])
         elif t == 'doubleSpin':
-            w = QtWidgets.QDoubleSpinBox()
+            w = QtGui.QDoubleSpinBox()
             if 'max' in o:
                 w.setMaximum(o['max'])
             if 'min' in o:
@@ -60,11 +55,11 @@ def generateUi(opts):
             w = SpinBox()
             w.setOpts(**o)
         elif t == 'check':
-            w = QtWidgets.QCheckBox()
+            w = QtGui.QCheckBox()
             if 'checked' in o:
                 w.setChecked(o['checked'])
         elif t == 'combo':
-            w = QtWidgets.QComboBox()
+            w = QtGui.QComboBox()
             for i in o['values']:
                 w.addItem(i)
         #elif t == 'colormap':
@@ -193,3 +188,4 @@ def metaArrayWrapper(fn):
         else:
             return fn(self, data, *args, **kargs)
     return newFn
+

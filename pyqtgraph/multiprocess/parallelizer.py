@@ -1,11 +1,8 @@
-import multiprocessing
-import os
-import re
-import sys
-import time
-
+# -*- coding: utf-8 -*-
+import os, sys, time, multiprocessing, re
 from .processes import ForkedProcess
 from .remoteproxy import ClosedError
+from ..python2_3 import basestring, xrange
 
 
 class CanceledError(Exception):
@@ -67,7 +64,7 @@ class Parallelize(object):
         self.showProgress = False
         if progressDialog is not None:
             self.showProgress = True
-            if isinstance(progressDialog, str):
+            if isinstance(progressDialog, basestring):
                 progressDialog = {'labelText': progressDialog}
             from ..widgets.ProgressDialog import ProgressDialog
             self.progressDlg = ProgressDialog(**progressDialog)
@@ -123,7 +120,7 @@ class Parallelize(object):
         
         ## break up tasks into one set per worker
         workers = self.workers
-        chunks = [[] for i in range(workers)]
+        chunks = [[] for i in xrange(workers)]
         i = 0
         for i in range(len(self.tasks)):
             chunks[i%workers].append(self.tasks[i])

@@ -1,47 +1,47 @@
+# -*- coding: utf-8 -*-
 """
 Use a HistogramLUTWidget to control the contrast / coloration of an image.
 """
 
+## Add path to library (just for examples; you do not need this)                                                                           
+import initExample
+
 import numpy as np
-
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtWidgets
 
-app = pg.mkQApp("Histogram Lookup Table Example")
-win = QtWidgets.QMainWindow()
-win.resize(880, 600)
+
+app = QtGui.QApplication([])
+win = QtGui.QMainWindow()
+win.resize(800,600)
 win.show()
 win.setWindowTitle('pyqtgraph example: Histogram LUT')
 
-cw = QtWidgets.QWidget()
+cw = QtGui.QWidget()
 win.setCentralWidget(cw)
 
-layout = QtWidgets.QGridLayout()
-cw.setLayout(layout)
-layout.setSpacing(0)
+l = QtGui.QGridLayout()
+cw.setLayout(l)
+l.setSpacing(0)
 
-view = pg.GraphicsView()
+v = pg.GraphicsView()
 vb = pg.ViewBox()
 vb.setAspectLocked()
-view.setCentralItem(vb)
-layout.addWidget(view, 0, 1, 3, 1)
+v.setCentralItem(vb)
+l.addWidget(v, 0, 0, 3, 1)
 
-hist = pg.HistogramLUTWidget(gradientPosition="left")
-layout.addWidget(hist, 0, 2)
+w = pg.HistogramLUTWidget()
+l.addWidget(w, 0, 1)
 
-
-monoRadio = QtWidgets.QRadioButton('mono')
-rgbaRadio = QtWidgets.QRadioButton('rgba')
-layout.addWidget(monoRadio, 1, 2)
-layout.addWidget(rgbaRadio, 2, 2)
+monoRadio = QtGui.QRadioButton('mono')
+rgbaRadio = QtGui.QRadioButton('rgba')
+l.addWidget(monoRadio, 1, 1)
+l.addWidget(rgbaRadio, 2, 1)
 monoRadio.setChecked(True)
-
 
 def setLevelMode():
     mode = 'mono' if monoRadio.isChecked() else 'rgba'
-    hist.setLevelMode(mode)
-
-
+    w.setLevelMode(mode)
 monoRadio.toggled.connect(setLevelMode)
 
 data = pg.gaussianFilter(np.random.normal(size=(256, 256, 3)), (20, 20, 0))
@@ -52,7 +52,11 @@ img = pg.ImageItem(data)
 vb.addItem(img)
 vb.autoRange()
 
-hist.setImageItem(img)
+w.setImageItem(img)
 
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

@@ -1,14 +1,9 @@
-import csv
-import gzip
-import os
-from math import asin, atan2, cos, degrees, hypot, sin, sqrt
-
-import numpy as np
-
+# -*- coding: utf-8 -*-
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtGui, QtCore
+import numpy as np
+import csv, gzip, os
 from pyqtgraph import Point
-from pyqtgraph.Qt import QtCore, QtGui
-
 
 class GlassDB:
     """
@@ -54,7 +49,7 @@ class GlassDB:
             B = list(map(float, [info['B1'], info['B2'], info['B3']]))
             C = list(map(float, [info['C1'], info['C2'], info['C3']]))
             w2 = (wl/1000.)**2
-            n = sqrt(1.0 + (B[0]*w2 / (w2-C[0])) + (B[1]*w2 / (w2-C[1])) + (B[2]*w2 / (w2-C[2])))
+            n = np.sqrt(1.0 + (B[0]*w2 / (w2-C[0])) + (B[1]*w2 / (w2-C[1])) + (B[2]*w2 / (w2-C[2])))
             cache[wl] = n
         return cache[wl]
         
@@ -152,9 +147,10 @@ class Optic(pg.GraphicsObject, ParamObj):
         self.setParams(**defaults)
         
     def updateTransform(self):
+        self.resetTransform()
         self.setPos(0, 0)
-        tr = QtGui.QTransform()
-        self.setTransform(tr.translate(Point(self['pos'])).rotate(self['angle']))
+        self.translate(Point(self['pos']))
+        self.rotate(self['angle'])
         
     def setParam(self, param, val):
         ParamObj.setParam(self, param, val)
@@ -164,7 +160,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         # Move graphics item
         self.gitem.setPos(Point(self['pos']))
         self.gitem.resetTransform()
-        self.gitem.setRotation(self['angle'])
+        self.gitem.rotate(self['angle'])
         
         # Move ROI to match
         try:
@@ -183,7 +179,7 @@ class Optic(pg.GraphicsObject, ParamObj):
         pos = self.roi.pos()
         # rotate gitem temporarily so we can decide where it will need to move
         self.gitem.resetTransform()
-        self.gitem.setRotation(self.roi.angle())
+        self.gitem.rotate(self.roi.angle())
         br = self.gitem.boundingRect()
         o1 = self.gitem.mapToParent(br.topLeft())
         self.setParams(angle=self.roi.angle(), pos=pos + (self.gitem.pos() - o1))
@@ -254,14 +250,10 @@ class Lens(Optic):
             p1 = surface.mapToItem(ray, p1)
             
             rd = ray['dir']
-
-            a1 = atan2(rd[1], rd[0])
-            try:
-                ar = a1 - ai + asin((sin(ai) * ray['ior'] / ior))
-            except ValueError:
-                ar = np.nan
+            a1 = np.arctan2(rd[1], rd[0])
+            ar = a1 - ai + np.arcsin((np.sin(ai) * ray['ior'] / ior))
             ray.setEnd(p1)
-            dp = Point(cos(ar), sin(ar))
+            dp = Point(np.cos(ar), np.sin(ar))
             ray = Ray(parent=ray, ior=ior, dir=dp)
         return [ray]
         
@@ -288,10 +280,10 @@ class Mirror(Optic):
         if p1 is not None:
             p1 = surface.mapToItem(ray, p1)
             rd = ray['dir']
-            a1 = atan2(rd[1], rd[0])
-            ar = a1 + np.pi - 2 * ai
+            a1 = np.arctan2(rd[1], rd[0])
+            ar = a1  + np.pi - 2*ai
             ray.setEnd(p1)
-            dp = Point(cos(ar), sin(ar))
+            dp = Point(np.cos(ar), np.sin(ar))
             ray = Ray(parent=ray, dir=dp)
         else:
             ray.setEnd(None)
@@ -348,7 +340,7 @@ class CircularSolid(pg.GraphicsObject, ParamObj):
         return self.path
     
     def paint(self, p, *args):
-        p.setRenderHints(p.renderHints() | p.RenderHint.Antialiasing)
+        p.setRenderHints(p.renderHints() | p.Antialiasing)
         p.setPen(self.pen)
         p.fillPath(self.path, self.brush)
         p.drawPath(self.path)
@@ -383,7 +375,7 @@ class CircleSurface(pg.GraphicsObject):
             ## half-height of surface can't be larger than radius
             h2 = min(h2, abs(r))
             arc = QtCore.QRectF(0, -r, r*2, r*2)
-            a1 = degrees(asin(h2/r))
+            a1 = np.arcsin(h2/r) * 180. / np.pi
             a2 = -2*a1
             a1 += 180.
             self.path.arcMoveTo(arc, a1)
@@ -415,13 +407,13 @@ class CircleSurface(pg.GraphicsObject):
             if abs(y) > h:
                 return None, None
             else:
-                return (Point(0, y), atan2(dir[1], dir[0]))
+                return (Point(0, y), np.arctan2(dir[1], dir[0]))
         else:
             #print "  curve"
             ## find intersection of circle and line (quadratic formula)
             dx = dir[0]
             dy = dir[1]
-            dr = hypot(dx, dy)  # length
+            dr = (dx**2 + dy**2) ** 0.5
             D = p[0] * (p[1]+dy) - (p[0]+dx) * p[1]
             idr2 = 1.0 / dr**2
             disc = r**2 * dr**2 - D**2
@@ -432,7 +424,8 @@ class CircleSurface(pg.GraphicsObject):
                 sgn = -1
             else:
                 sgn = 1
-
+            
+        
             br = self.path.boundingRect()
             x1 = (D*dy + sgn*dx*disc2) * idr2
             y1 = (-D*dx + abs(dy)*disc2) * idr2
@@ -444,12 +437,19 @@ class CircleSurface(pg.GraphicsObject):
                 pt = Point(x2, y2)
                 if not br.contains(x2+r, y2):
                     return None, None
+                    raise Exception("No intersection!")
                 
-            norm = atan2(pt[1], pt[0])
+            norm = np.arctan2(pt[1], pt[0])
             if r < 0:
                 norm += np.pi
+            #print "  norm:", norm*180/3.1415
             dp = p - pt
-            ang = atan2(dp[1], dp[0]) 
+            #print "  dp:", dp
+            ang = np.arctan2(dp[1], dp[0]) 
+            #print "  ang:", ang*180/3.1415
+            #print "  ai:", (ang-norm)*180/3.1415
+            
+            #print "  intersection:", pt
             return pt + Point(r, 0), ang-norm
 
             
@@ -516,8 +516,8 @@ class Ray(pg.GraphicsObject, ParamObj):
         
     def paint(self, p, *args):
         #p.setPen(pg.mkPen((255,0,0, 150)))
-        p.setRenderHints(p.renderHints() | p.RenderHint.Antialiasing)
-        p.setCompositionMode(p.CompositionMode.CompositionMode_Plus)
+        p.setRenderHints(p.renderHints() | p.Antialiasing)
+        p.setCompositionMode(p.CompositionMode_Plus)
         p.setPen(wlPen(self['wl']))
         p.drawPath(self.path)
         
@@ -559,3 +559,4 @@ class Tracer(QtCore.QObject):
             
     def trace(self):
         trace(self.rays, self.optics)
+

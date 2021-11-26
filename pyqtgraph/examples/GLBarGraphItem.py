@@ -1,18 +1,21 @@
+# -*- coding: utf-8 -*-
 """
-This example demonstrates the use of GLBarGraphItem.
+Demonstrate use of GLLinePlotItem to draw cross-sections of a surface.
 
 """
+## Add path to library (just for examples; you do not need this)
+import initExample
 
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph.opengl as gl
+import pyqtgraph as pg
 import numpy as np
 
-import pyqtgraph as pg
-import pyqtgraph.opengl as gl
-
-app = pg.mkQApp("GLBarGraphItem Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
+w.opts['distance'] = 40
 w.show()
 w.setWindowTitle('pyqtgraph example: GLBarGraphItem')
-w.setCameraPosition(distance=40)
 
 gx = gl.GLGridItem()
 gx.rotate(90, 0, 1, 0)
@@ -36,5 +39,9 @@ size[...,2] = np.random.normal(size=(10,10))
 bg = gl.GLBarGraphItem(pos, size)
 w.addItem(bg)
 
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

@@ -1,14 +1,18 @@
 """
 Demonstrate the use of layouts to control placement of multiple plots / views /
 labels
+
+
 """
 
+## Add path to library (just for examples; you do not need this)
+import initExample
 
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 import numpy as np
 
-import pyqtgraph as pg
-
-app = pg.mkQApp("Gradiant Layout Example")
+app = QtGui.QApplication([])
 view = pg.GraphicsView()
 l = pg.GraphicsLayout(border=(100,100,100))
 view.setCentralItem(l)
@@ -74,5 +78,10 @@ p2.plot([1,3,2,4,3,5])
 p4.plot([1,3,2,4,3,5])
 p5.plot([1,3,2,4,3,5])
 
+
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

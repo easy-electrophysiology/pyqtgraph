@@ -1,9 +1,9 @@
-from time import perf_counter
-
-import numpy as np
+# -*- coding: utf-8 -*-
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui
+import numpy as np
 
 app = pg.mkQApp()
 plt = pg.PlotWidget()
@@ -18,7 +18,7 @@ plt.show()
 plt.enableAutoRange(False, False)
 
 def plot():
-    start = perf_counter()
+    start = pg.ptime.time()
     n = 15
     pts = 100
     x = np.linspace(0, 0.8, pts)
@@ -34,12 +34,12 @@ def plot():
             plt.addItem(pg.PlotCurveItem(x=x+i, y=y+j))
             
             #path = pg.arrayToQPath(x+i, y+j)
-            #item = QtWidgets.QGraphicsPathItem(path)
+            #item = QtGui.QGraphicsPathItem(path)
             #item.setPen(pg.mkPen('w'))
             #plt.addItem(item)
             
-    dt = perf_counter() - start
-    print(f"Create plots tooks {dt * 1000:.3f} ms")
+    dt = pg.ptime.time() - start
+    print("Create plots took: %0.3fms" % (dt*1000))
 
 ## Plot and clear 5 times, printing the time it took
 for i in range(5):
@@ -55,7 +55,7 @@ for i in range(5):
 def fastPlot():
     ## Different approach:  generate a single item with all data points.
     ## This runs about 20x faster.
-    start = perf_counter()
+    start = pg.ptime.time()
     n = 15
     pts = 100
     x = np.linspace(0, 0.8, pts)
@@ -67,11 +67,11 @@ def fastPlot():
     conn = np.ones((n*n,pts))
     conn[:,-1] = False # make sure plots are disconnected
     path = pg.arrayToQPath(xdata.flatten(), ydata.flatten(), conn.flatten())
-    item = QtWidgets.QGraphicsPathItem(path)
+    item = QtGui.QGraphicsPathItem(path)
     item.setPen(pg.mkPen('w'))
     plt.addItem(item)
     
-    dt = perf_counter() - start
+    dt = pg.ptime.time() - start
     print("Create plots took: %0.3fms" % (dt*1000))
 
 
@@ -86,5 +86,8 @@ else:
 
 plt.autoRange()
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

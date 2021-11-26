@@ -1,11 +1,15 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates a way to put multiple axes around a single plot. 
 
 (This will eventually become a built-in feature of PlotItem)
-"""
 
+"""
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
+from pyqtgraph.Qt import QtCore, QtGui
+import numpy as np
 
 pg.mkQApp()
 
@@ -56,5 +60,8 @@ p1.plot([1,2,4,8,16,32])
 p2.addItem(pg.PlotCurveItem([10,20,40,80,40,20], pen='b'))
 p3.addItem(pg.PlotCurveItem([3200,1600,800,400,200,100], pen='r'))
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

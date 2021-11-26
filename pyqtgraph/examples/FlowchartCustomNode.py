@@ -1,25 +1,26 @@
+# -*- coding: utf-8 -*-
 """
 This example demonstrates writing a custom Node subclass for use with flowcharts.
 
 We implement a couple of simple image processing nodes.
 """
+import initExample ## Add path to library (just for examples; you do not need this)
 
+from pyqtgraph.flowchart import Flowchart, Node
+import pyqtgraph.flowchart.library as fclib
+from pyqtgraph.flowchart.library.common import CtrlNode
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
 import numpy as np
 
-import pyqtgraph as pg
-import pyqtgraph.flowchart.library as fclib
-from pyqtgraph.flowchart import Flowchart, Node
-from pyqtgraph.flowchart.library.common import CtrlNode
-from pyqtgraph.Qt import QtWidgets
-
-app = pg.mkQApp("Flowchart Custom Node Example")
+app = QtGui.QApplication([])
 
 ## Create main window with a grid layout inside
-win = QtWidgets.QMainWindow()
+win = QtGui.QMainWindow()
 win.setWindowTitle('pyqtgraph example: FlowchartCustomNode')
-cw = QtWidgets.QWidget()
+cw = QtGui.QWidget()
 win.setCentralWidget(cw)
-layout = QtWidgets.QGridLayout()
+layout = QtGui.QGridLayout()
 cw.setLayout(layout)
 
 ## Create an empty flowchart with a single input and output
@@ -149,5 +150,10 @@ fc.connectTerminals(fc['dataIn'], v1Node['data'])
 fc.connectTerminals(fNode['dataOut'], v2Node['data'])
 fc.connectTerminals(fNode['dataOut'], fc['dataOut'])
 
+
+
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

@@ -1,15 +1,19 @@
+# -*- coding: utf-8 -*-
+## Add path to library (just for examples; you do not need this)
+import initExample
+
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 from pyqtgraph.GraphicsScene import GraphicsScene
-from pyqtgraph.Qt import QtCore, QtWidgets
 
-app = pg.mkQApp("GraphicsScene Example")
+app = QtGui.QApplication([])
 win = pg.GraphicsView()
 win.show()
 
 
-class Obj(QtWidgets.QGraphicsObject):
+class Obj(QtGui.QGraphicsObject):
     def __init__(self):
-        QtWidgets.QGraphicsObject.__init__(self)
+        QtGui.QGraphicsObject.__init__(self)
         GraphicsScene.registerObject(self)
         
     def paint(self, p, *args):
@@ -44,9 +48,9 @@ win.addItem(obj2)
 
 def clicked():
     print("button click")
-btn = QtWidgets.QPushButton("BTN")
+btn = QtGui.QPushButton("BTN")
 btn.clicked.connect(clicked)
-prox = QtWidgets.QGraphicsProxyWidget()
+prox = QtGui.QGraphicsProxyWidget()
 prox.setWidget(btn)
 prox.setPos(100,0)
 vb.addItem(prox)
@@ -54,5 +58,9 @@ vb.addItem(prox)
 g = pg.GridItem()
 vb.addItem(g)
 
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

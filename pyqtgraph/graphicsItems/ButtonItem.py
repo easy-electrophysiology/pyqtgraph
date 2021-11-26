@@ -1,4 +1,4 @@
-from ..Qt import QtCore, QtGui
+from ..Qt import QtGui, QtCore
 from .GraphicsObject import GraphicsObject
 
 __all__ = ['ButtonItem']
@@ -17,7 +17,7 @@ class ButtonItem(GraphicsObject):
             
         if width is not None:
             s = float(width) / self.pixmap.width()
-            self.setScale(s)
+            self.scale(s, s)
         if parentItem is not None:
             self.setParentItem(parentItem)
         self.setOpacity(0.7)
@@ -50,7 +50,7 @@ class ButtonItem(GraphicsObject):
         self.setOpacity(0.7)
         
     def paint(self, p, *args):
-        p.setRenderHint(p.RenderHint.Antialiasing)
+        p.setRenderHint(p.Antialiasing)
         p.drawPixmap(0, 0, self.pixmap)
         
     def boundingRect(self):

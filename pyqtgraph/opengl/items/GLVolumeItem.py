@@ -1,8 +1,8 @@
-from OpenGL.GL import *  # noqa
-import numpy as np
-
+from OpenGL.GL import *
+from .. GLGraphicsItem import GLGraphicsItem
 from ...Qt import QtGui
-from ..GLGraphicsItem import GLGraphicsItem
+import numpy as np
+from ... import debug
 
 __all__ = ['GLVolumeItem']
 
@@ -227,3 +227,4 @@ class GLVolumeItem(GLGraphicsItem):
         #glPopMatrix()
         
         
+

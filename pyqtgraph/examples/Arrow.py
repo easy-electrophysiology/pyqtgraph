@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Display an animated arrowhead following a curve.
 This example uses the CurveArrow class, which is a combination
@@ -7,14 +8,16 @@ To place a static arrow anywhere in a scene, use ArrowItem.
 To attach other types of item to a curve, use CurvePoint.
 """
 
+import initExample ## Add path to library (just for examples; you do not need this)
+
 import numpy as np
-
+from pyqtgraph.Qt import QtGui, QtCore
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
 
-app = pg.mkQApp("Arrow Example")
 
-w = QtWidgets.QMainWindow()
+app = QtGui.QApplication([])
+
+w = QtGui.QMainWindow()
 cw = pg.GraphicsLayoutWidget()
 w.show()
 w.resize(400,600)
@@ -27,7 +30,7 @@ p2 = cw.addPlot(row=1, col=0)
 ## variety of arrow shapes
 a1 = pg.ArrowItem(angle=-160, tipAngle=60, headLen=40, tailLen=40, tailWidth=20, pen={'color': 'w', 'width': 3})
 a2 = pg.ArrowItem(angle=-120, tipAngle=30, baseAngle=20, headLen=40, tailLen=40, tailWidth=8, pen=None, brush='y')
-a3 = pg.ArrowItem(angle=-60, baseAngle=20, headLen=40, headWidth=20, tailLen=None, brush=None)
+a3 = pg.ArrowItem(angle=-60, tipAngle=30, baseAngle=20, headLen=40, tailLen=None, brush=None)
 a4 = pg.ArrowItem(angle=-20, tipAngle=30, baseAngle=-30, headLen=40, tailLen=None)
 a2.setPos(10,0)
 a3.setPos(20,0)
@@ -47,5 +50,8 @@ p2.addItem(a)
 anim = a.makeAnimation(loop=-1)
 anim.start()
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

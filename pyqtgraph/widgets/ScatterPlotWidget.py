@@ -1,19 +1,17 @@
-from collections import OrderedDict
-
-import numpy as np
-
+from ..Qt import QtGui, QtCore
+from .PlotWidget import PlotWidget
+from .DataFilterWidget import DataFilterParameter
+from .ColorMapWidget import ColorMapParameter
+from .. import parametertree as ptree
 from .. import functions as fn
 from .. import getConfigOption
-from .. import parametertree as ptree
 from ..graphicsItems.TextItem import TextItem
-from ..Qt import QtCore, QtWidgets
-from .ColorMapWidget import ColorMapParameter
-from .DataFilterWidget import DataFilterParameter
-from .PlotWidget import PlotWidget
+import numpy as np
+from ..pgcollections import OrderedDict
 
 __all__ = ['ScatterPlotWidget']
 
-class ScatterPlotWidget(QtWidgets.QSplitter):
+class ScatterPlotWidget(QtGui.QSplitter):
     """
     This is a high-level widget for exploring relationships in tabular data.
         
@@ -35,15 +33,14 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
        specifying multiple criteria.
     4) A PlotWidget for displaying the data.
     """
-    sigScatterPlotClicked = QtCore.Signal(object, object, object)
-    sigScatterPlotHovered = QtCore.Signal(object, object, object)
-
+    sigScatterPlotClicked = QtCore.Signal(object, object)
+    
     def __init__(self, parent=None):
-        QtWidgets.QSplitter.__init__(self, QtCore.Qt.Orientation.Horizontal)
-        self.ctrlPanel = QtWidgets.QSplitter(QtCore.Qt.Orientation.Vertical)
+        QtGui.QSplitter.__init__(self, QtCore.Qt.Horizontal)
+        self.ctrlPanel = QtGui.QSplitter(QtCore.Qt.Vertical)
         self.addWidget(self.ctrlPanel)
-        self.fieldList = QtWidgets.QListWidget()
-        self.fieldList.setSelectionMode(self.fieldList.SelectionMode.ExtendedSelection)
+        self.fieldList = QtGui.QListWidget()
+        self.fieldList.setSelectionMode(self.fieldList.ExtendedSelection)
         self.ptree = ptree.ParameterTree(showHeader=False)
         self.filter = DataFilterParameter()
         self.colorMap = ColorMapParameter()
@@ -88,7 +85,7 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         self.mouseOverField = mouseOverField
         self.fieldList.clear()
         for f,opts in fields:
-            item = QtWidgets.QListWidgetItem(f)
+            item = QtGui.QListWidgetItem(f)
             item.opts = opts
             item = self.fieldList.addItem(item)
         self.filter.setFields(fields)
@@ -260,7 +257,6 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
         self._indexMap = None
         self.scatterPlot = self.plot.plot(xy[0], xy[1], data=data, **style)
         self.scatterPlot.sigPointsClicked.connect(self.plotClicked)
-        self.scatterPlot.sigPointsHovered.connect(self.plotHovered)
         self.updateSelected()
 
     def updateSelected(self):
@@ -283,11 +279,8 @@ class ScatterPlotWidget(QtWidgets.QSplitter):
             self._indexMap = {j:i for i,j in enumerate(self._visibleIndices)}
         return self._indexMap
 
-    def plotClicked(self, plot, points, ev):
+    def plotClicked(self, plot, points):
         # Tag each point with its index into the original dataset
         for pt in points:
             pt.originalIndex = self._visibleIndices[pt.index()]
-        self.sigScatterPlotClicked.emit(self, points, ev)
-
-    def plotHovered(self, plot, points, ev):
-        self.sigScatterPlotHovered.emit(self, points, ev)
+        self.sigScatterPlotClicked.emit(self, points)

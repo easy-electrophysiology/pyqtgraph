@@ -1,20 +1,22 @@
-import numpy as np
-
-from .. import functions as fn
-from ..Qt import QtWidgets
+# -*- coding: utf-8 -*-
+from ..Qt import QtGui, QtCore
+from ..pgcollections import OrderedDict
 from .DataTreeWidget import DataTreeWidget
+from .. import functions as fn
+import types, traceback
+import numpy as np
 
 __all__ = ['DiffTreeWidget']
 
 
-class DiffTreeWidget(QtWidgets.QWidget):
+class DiffTreeWidget(QtGui.QWidget):
     """
     Widget for displaying differences between hierarchical python data structures
     (eg, nested dicts, lists, and arrays)
     """
     def __init__(self, parent=None, a=None, b=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.layout = QtWidgets.QHBoxLayout()
+        QtGui.QWidget.__init__(self, parent)
+        self.layout = QtGui.QHBoxLayout()
         self.setLayout(self.layout)
         self.trees = [DataTreeWidget(self), DataTreeWidget(self)]
         for t in self.trees:

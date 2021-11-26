@@ -1,30 +1,30 @@
 import sys
-from collections import OrderedDict
+from ..Qt import QtGui, QtCore
+from ..SignalProxy import SignalProxy
+from ..pgcollections import OrderedDict
+from ..python2_3 import asUnicode, basestring
 
-from ..Qt import QtWidgets
 
-__all__ = ['ComboBox']
-
-class ComboBox(QtWidgets.QComboBox):
+class ComboBox(QtGui.QComboBox):
     """Extends QComboBox to add extra functionality.
 
-      * Handles dict mappings -- user selects a text key, and the ComboBox indicates
-        the selected value.
-      * Requires item strings to be unique
-      * Remembers selected value if list is cleared and subsequently repopulated
-      * setItems() replaces the items in the ComboBox and blocks signals if the
-        value ultimately does not change.
+    * Handles dict mappings -- user selects a text key, and the ComboBox indicates
+      the selected value.
+    * Requires item strings to be unique
+    * Remembers selected value if list is cleared and subsequently repopulated
+    * setItems() replaces the items in the ComboBox and blocks signals if the
+      value ultimately does not change.
     """
     
     
     def __init__(self, parent=None, items=None, default=None):
-        QtWidgets.QComboBox.__init__(self, parent)
+        QtGui.QComboBox.__init__(self, parent)
         self.currentIndexChanged.connect(self.indexChanged)
         self._ignoreIndexChange = False
         
         #self.value = default
         if 'darwin' in sys.platform: ## because MacOSX can show names that are wider than the comboBox
-            self.setSizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
+            self.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToMinimumContentsLength)
             #self.setMinimumContentsLength(10)
         self._chosenText = None
         self._items = OrderedDict()
@@ -63,7 +63,7 @@ class ComboBox(QtWidgets.QComboBox):
         """
         if self.count() == 0:
             return None
-        text = self.currentText()
+        text = asUnicode(self.currentText())
         return self._items[text]
     
     def ignoreIndexChange(func):
@@ -130,10 +130,10 @@ class ComboBox(QtWidgets.QComboBox):
         # current index has changed; need to remember new 'chosen text'
         if self._ignoreIndexChange:
             return
-        self._chosenText = self.currentText()
+        self._chosenText = asUnicode(self.currentText())
         
     def setCurrentIndex(self, index):
-        QtWidgets.QComboBox.setCurrentIndex(self, index)
+        QtGui.QComboBox.setCurrentIndex(self, index)
         
     def itemsChanged(self):
         # try to set the value to the last one selected, if it is available.
@@ -146,20 +146,20 @@ class ComboBox(QtWidgets.QComboBox):
     @ignoreIndexChange
     def insertItem(self, *args):
         raise NotImplementedError()
-        #QtWidgets.QComboBox.insertItem(self, *args)
+        #QtGui.QComboBox.insertItem(self, *args)
         #self.itemsChanged()
         
     @ignoreIndexChange
     def insertItems(self, *args):
         raise NotImplementedError()
-        #QtWidgets.QComboBox.insertItems(self, *args)
+        #QtGui.QComboBox.insertItems(self, *args)
         #self.itemsChanged()
     
     @ignoreIndexChange
     def addItem(self, *args, **kwds):
         # Need to handle two different function signatures for QComboBox.addItem
         try:
-            if isinstance(args[0], str):
+            if isinstance(args[0], basestring):
                 text = args[0]
                 if len(args) == 2:
                     value = args[1]
@@ -179,7 +179,7 @@ class ComboBox(QtWidgets.QComboBox):
             raise Exception('ComboBox already has item named "%s".' % text)
         
         self._items[text] = value
-        QtWidgets.QComboBox.addItem(self, *args)
+        QtGui.QComboBox.addItem(self, *args)
         self.itemsChanged()
         
     def setItemValue(self, name, value):
@@ -206,14 +206,14 @@ class ComboBox(QtWidgets.QComboBox):
         
         for k,v in items.items():
             self._items[k] = v
-        QtWidgets.QComboBox.addItems(self, list(texts))
+        QtGui.QComboBox.addItems(self, list(texts))
         
         self.itemsChanged()
         
     @ignoreIndexChange
     def clear(self):
         self._items = OrderedDict()
-        QtWidgets.QComboBox.clear(self)
+        QtGui.QComboBox.clear(self)
         self.itemsChanged()
         
     def saveState(self):
@@ -229,7 +229,7 @@ class ComboBox(QtWidgets.QComboBox):
             except AttributeError:
                 pass
         if data is None:
-            return self.itemText(ind)
+            return asUnicode(self.itemText(ind))
         else:
             return data
         

@@ -1,15 +1,19 @@
+# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of GLSurfacePlotItem.
 """
 
-import numpy as np
 
+## Add path to library (just for examples; you do not need this)
+import initExample
+
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-from pyqtgraph.Qt import QtCore
+import numpy as np
 
 ## Create a GL View widget to display data
-app = pg.mkQApp("GLSurfacePlot Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
 w.setWindowTitle('pyqtgraph example: GLSurfacePlot')
@@ -88,5 +92,8 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(30)
 
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

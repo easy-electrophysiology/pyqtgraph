@@ -1,12 +1,17 @@
+# -*- coding: utf-8 -*-
 """
 Simple examples demonstrating the use of GLMeshItem.
+
 """
 
+## Add path to library (just for examples; you do not need this)
+import initExample
 
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
-app = pg.mkQApp("GLMeshItem Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
 w.setWindowTitle('pyqtgraph example: GLMeshItem')
@@ -17,6 +22,7 @@ g.scale(2,2,1)
 w.addItem(g)
 
 import numpy as np
+
 
 ## Example 1:
 ## Array of vertex positions and array of vertex indexes defining faces
@@ -111,5 +117,13 @@ m6.rotate(0., 0, 1, 1)
 w.addItem(m5)
 w.addItem(m6)
 
+
+
+    
+
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

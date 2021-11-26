@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 This example demonstrates the use of pyqtgraph's dock widget system.
 
@@ -9,18 +10,22 @@ programatically generate complex dock arrangements). Additionally, Qt's docks ar
 designed to be used as small panels around the outer edge of a window. Pyqtgraph's 
 docks were created with the notion that the entire window (or any portion of it) 
 would consist of dockable components.
+
 """
 
-import numpy as np
+
+
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.console import ConsoleWidget
-from pyqtgraph.dockarea.Dock import Dock
-from pyqtgraph.dockarea.DockArea import DockArea
-from pyqtgraph.Qt import QtWidgets
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph.console
+import numpy as np
 
-app = pg.mkQApp("DockArea Example")
-win = QtWidgets.QMainWindow()
+from pyqtgraph.dockarea import *
+
+app = QtGui.QApplication([])
+win = QtGui.QMainWindow()
 area = DockArea()
 win.setCentralWidget(area)
 win.resize(1000,500)
@@ -52,7 +57,7 @@ area.moveDock(d5, 'top', d2)     ## move d5 to top edge of d2
 
 ## first dock gets save/restore buttons
 w1 = pg.LayoutWidget()
-label = QtWidgets.QLabel(""" -- DockArea Example -- 
+label = QtGui.QLabel(""" -- DockArea Example -- 
 This window has 6 Dock widgets in it. Each dock can be dragged
 by its title bar to occupy a different space within the window 
 but note that one dock has its title bar hidden). Additionally,
@@ -60,8 +65,8 @@ the borders between docks may be dragged to resize. Docks that are dragged on to
 of one another are stacked in a tabbed layout. Double-click a dock title
 bar to place it in its own window.
 """)
-saveBtn = QtWidgets.QPushButton('Save dock state')
-restoreBtn = QtWidgets.QPushButton('Restore dock state')
+saveBtn = QtGui.QPushButton('Save dock state')
+restoreBtn = QtGui.QPushButton('Restore dock state')
 restoreBtn.setEnabled(False)
 w1.addWidget(label, row=0, col=0)
 w1.addWidget(saveBtn, row=1, col=0)
@@ -79,7 +84,7 @@ saveBtn.clicked.connect(save)
 restoreBtn.clicked.connect(load)
 
 
-w2 = ConsoleWidget()
+w2 = pg.console.ConsoleWidget()
 d2.addWidget(w2)
 
 ## Hide title bar on dock 3
@@ -106,5 +111,8 @@ win.show()
 
 
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

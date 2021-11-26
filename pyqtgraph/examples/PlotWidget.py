@@ -1,20 +1,25 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates use of PlotWidget class. This is little more than a 
 GraphicsView with a PlotItem placed in its center.
 """
 
+
+import initExample ## Add path to library (just for examples; you do not need this)
+
+
+from pyqtgraph.Qt import QtGui, QtCore
 import numpy as np
-
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
 
+#QtGui.QApplication.setGraphicsSystem('raster')
 app = pg.mkQApp()
-mw = QtWidgets.QMainWindow()
+mw = QtGui.QMainWindow()
 mw.setWindowTitle('pyqtgraph example: PlotWidget')
 mw.resize(800,800)
-cw = QtWidgets.QWidget()
+cw = QtGui.QWidget()
 mw.setCentralWidget(cw)
-l = QtWidgets.QVBoxLayout()
+l = QtGui.QVBoxLayout()
 cw.setLayout(l)
 
 pw = pg.PlotWidget(name='Plot1')  ## giving the plots names allows us to link their axes together
@@ -31,7 +36,7 @@ p1 = pw.plot()
 p1.setPen((200,200,100))
 
 ## Add in some extra graphics
-rect = QtWidgets.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 5e-11))
+rect = QtGui.QGraphicsRectItem(QtCore.QRectF(0, 0, 1, 5e-11))
 rect.setPen(pg.mkPen(100, 200, 100))
 pw.addItem(rect)
 
@@ -82,5 +87,8 @@ line = pg.InfiniteLine(angle=90, movable=True)
 pw3.addItem(line)
 line.setBounds([0,200])
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

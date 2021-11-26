@@ -1,15 +1,17 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates very basic use of ImageItem to display image data inside a ViewBox.
 """
 
-from time import perf_counter
+## Add path to library (just for examples; you do not need this)
+import initExample
 
+from pyqtgraph.Qt import QtCore, QtGui
 import numpy as np
-
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore
+import pyqtgraph.ptime as ptime
 
-app = pg.mkQApp("ImageItem Example")
+app = QtGui.QApplication([])
 
 ## Create window with GraphicsView widget
 win = pg.GraphicsLayoutWidget()
@@ -31,30 +33,29 @@ view.setRange(QtCore.QRectF(0, 0, 600, 600))
 data = np.random.normal(size=(15, 600, 600), loc=1024, scale=64).astype(np.uint16)
 i = 0
 
-updateTime = perf_counter()
-elapsed = 0
-
-timer = QtCore.QTimer()
-timer.setSingleShot(True)
-# not using QTimer.singleShot() because of persistence on PyQt. see PR #1605
+updateTime = ptime.time()
+fps = 0
 
 def updateData():
-    global img, data, i, updateTime, elapsed
+    global img, data, i, updateTime, fps
 
     ## Display the data
     img.setImage(data[i])
     i = (i+1) % data.shape[0]
 
-    timer.start(1)
-    now = perf_counter()
-    elapsed_now = now - updateTime
+    QtCore.QTimer.singleShot(1, updateData)
+    now = ptime.time()
+    fps2 = 1.0 / (now-updateTime)
     updateTime = now
-    elapsed = elapsed * 0.9 + elapsed_now * 0.1
-
-    # print(f"{1 / elapsed:.1f} fps")
+    fps = fps * 0.9 + fps2 * 0.1
     
-timer.timeout.connect(updateData)
+    #print "%0.1f fps" % fps
+    
+
 updateData()
 
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

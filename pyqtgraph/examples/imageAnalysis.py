@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Demonstrates common image analysis tools.
 
@@ -5,11 +6,12 @@ Many of the features demonstrated here are already provided by the ImageView
 widget, but here we present a lower-level approach that provides finer control
 over the user interface.
 """
-
-import numpy as np
+import initExample ## Add path to library (just for examples; you do not need this)
 
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtGui
+from pyqtgraph.Qt import QtCore, QtGui
+import numpy as np
+
 
 # Interpret image data as row-major instead of col-major
 pg.setConfigOptions(imageAxisOrder='row-major')
@@ -69,8 +71,8 @@ hist.setLevels(data.min(), data.max())
 iso.setData(pg.gaussianFilter(data, (2, 2)))
 
 # set position and scale of image
-tr = QtGui.QTransform()
-img.setTransform(tr.scale(0.2, 0.2).translate(-50, 0))
+img.scale(0.2, 0.2)
+img.translate(-50, 0)
 
 # zoom to fit imageo
 p1.autoRange()  
@@ -104,12 +106,16 @@ def imageHoverEvent(event):
     val = data[i, j]
     ppos = img.mapToParent(pos)
     x, y = ppos.x(), ppos.y()
-    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %.3g" % (x, y, i, j, val))
+    p1.setTitle("pos: (%0.1f, %0.1f)  pixel: (%d, %d)  value: %g" % (x, y, i, j, val))
 
 # Monkey-patch the image to use our custom hover function. 
 # This is generally discouraged (you should subclass ImageItem instead),
 # but it works for a very simple use like this. 
 img.hoverEvent = imageHoverEvent
 
+
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

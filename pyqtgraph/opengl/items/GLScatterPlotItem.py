@@ -1,10 +1,9 @@
-from OpenGL.GL import *  # noqa
-import numpy as np
-
-from ... import functions as fn
-from ...Qt import QtGui
+from OpenGL.GL import *
+from OpenGL.arrays import vbo
+from .. GLGraphicsItem import GLGraphicsItem
 from .. import shaders
-from ..GLGraphicsItem import GLGraphicsItem
+from ... import QtGui
+import numpy as np
 
 __all__ = ['GLScatterPlotItem']
 
@@ -12,13 +11,14 @@ class GLScatterPlotItem(GLGraphicsItem):
     """Draws points at a list of 3D positions."""
     
     def __init__(self, **kwds):
-        super().__init__()
+        GLGraphicsItem.__init__(self)
         glopts = kwds.pop('glOptions', 'additive')
         self.setGLOptions(glopts)
-        self.pos = None
+        self.pos = []
         self.size = 10
         self.color = [1.0,1.0,1.0,0.5]
         self.pxMode = True
+        #self.vbo = {}      ## VBO does not appear to improve performance very much.
         self.setData(**kwds)
         self.shader = None
     
@@ -49,6 +49,7 @@ class GLScatterPlotItem(GLGraphicsItem):
         for arg in args:
             if arg in kwds:
                 setattr(self, arg, kwds[arg])
+                #self.vbo.pop(arg, None)
                 
         self.pxMode = kwds.get('pxMode', self.pxMode)
         self.update()
@@ -59,12 +60,13 @@ class GLScatterPlotItem(GLGraphicsItem):
         
         ## Generate texture for rendering points
         w = 64
-        def genTexture(x,y):
-            r = np.hypot((x-(w-1)/2.), (y-(w-1)/2.))
-            return 255 * (w / 2 - fn.clip_array(r, w / 2 - 1, w / 2))
+        def fn(x,y):
+            r = ((x-(w-1)/2.)**2 + (y-(w-1)/2.)**2) ** 0.5
+            return 255 * (w/2. - np.clip(r, w/2.-1.0, w/2.))
         pData = np.empty((w, w, 4))
         pData[:] = 255
-        pData[:,:,3] = np.fromfunction(genTexture, pData.shape[:2])
+        pData[:,:,3] = np.fromfunction(fn, pData.shape[:2])
+        #print pData.shape, pData.min(), pData.max()
         pData = pData.astype(np.ubyte)
         
         if getattr(self, "pointTexture", None) is None:
@@ -75,6 +77,11 @@ class GLScatterPlotItem(GLGraphicsItem):
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, pData.shape[0], pData.shape[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, pData)
         
         self.shader = shaders.getShaderProgram('pointSprite')
+        
+    #def getVBO(self, name):
+        #if name not in self.vbo:
+            #self.vbo[name] = vbo.VBO(getattr(self, name).astype('f'))
+        #return self.vbo[name]
         
     #def setupGLState(self):
         #"""Prepare OpenGL state for drawing. This function is called immediately before painting."""
@@ -92,9 +99,6 @@ class GLScatterPlotItem(GLGraphicsItem):
         ##glPointParameterfv(GL_POINT_SIZE_MIN, (0,))
         
     def paint(self):
-        if self.pos is None:
-            return
-
         self.setupGLState()
         
         glEnable(GL_POINT_SPRITE)
@@ -126,10 +130,10 @@ class GLScatterPlotItem(GLGraphicsItem):
                     glEnableClientState(GL_COLOR_ARRAY)
                     glColorPointerf(self.color)
                 else:
-                    color = self.color
-                    if isinstance(color, QtGui.QColor):
-                        color = color.getRgbF()
-                    glColor4f(*color)
+                    if isinstance(self.color, QtGui.QColor):
+                        glColor4f(*fn.glColor(self.color))
+                    else:
+                        glColor4f(*self.color)
                 
                 if not self.pxMode or isinstance(self.size, np.ndarray):
                     glEnableClientState(GL_NORMAL_ARRAY)
@@ -138,12 +142,9 @@ class GLScatterPlotItem(GLGraphicsItem):
                         norm[...,0] = self.size
                     else:
                         gpos = self.mapToView(pos.transpose()).transpose()
-                        if self.view():
-                            pxSize = self.view().pixelSize(gpos)
-                        else:
-                            pxSize = self.parentItem().view().pixelSize(gpos)
+                        pxSize = self.view().pixelSize(gpos)
                         norm[...,0] = self.size / pxSize
-        
+                    
                     glNormalPointerf(norm)
                 else:
                     glNormal3f(self.size, 0, 0)  ## vertex shader uses norm.x to determine point size

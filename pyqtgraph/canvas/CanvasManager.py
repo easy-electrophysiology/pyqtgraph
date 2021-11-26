@@ -1,9 +1,8 @@
-from ..Qt import QtCore, QtWidgets
-
+# -*- coding: utf-8 -*-
+from ..Qt import QtCore, QtGui
 if not hasattr(QtCore, 'Signal'):
     QtCore.Signal = QtCore.pyqtSignal
 import weakref
-
 
 class CanvasManager(QtCore.QObject):
     SINGLETON = None
@@ -46,9 +45,9 @@ class CanvasManager(QtCore.QObject):
 manager = CanvasManager()
 
 
-class CanvasCombo(QtWidgets.QComboBox):
+class CanvasCombo(QtGui.QComboBox):
     def __init__(self, parent=None):
-        QtWidgets.QComboBox.__init__(self, parent)
+        QtGui.QComboBox.__init__(self, parent)
         man = CanvasManager.instance()
         man.sigCanvasListChanged.connect(self.updateCanvasList)
         self.hostName = None
@@ -74,3 +73,4 @@ class CanvasCombo(QtWidgets.QComboBox):
     def setHostName(self, name):
         self.hostName = name
         self.updateCanvasList()
+

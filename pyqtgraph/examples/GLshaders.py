@@ -1,14 +1,19 @@
+# -*- coding: utf-8 -*-
 """
 Demonstration of some of the shader programs included with pyqtgraph that can be 
 used to affect the appearance of a surface.
 """
 
-import numpy as np
 
+
+## Add path to library (just for examples; you do not need this)
+import initExample
+
+from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 
-app = pg.mkQApp("GLShaders Example")
+app = QtGui.QApplication([])
 w = gl.GLViewWidget()
 w.show()
 w.setWindowTitle('pyqtgraph example: GL Shaders')
@@ -17,6 +22,9 @@ w.setCameraPosition(distance=15, azimuth=-90)
 g = gl.GLGridItem()
 g.scale(2,2,1)
 w.addItem(g)
+
+import numpy as np
+
 
 md = gl.MeshData.sphere(rows=10, cols=20)
 x = np.linspace(-8, 8, 6)
@@ -93,5 +101,10 @@ w.addItem(m6)
 #w.addItem(m2)
 #m2.translate(-25, -25, -50)
     
+
+
+## Start Qt event loop unless running in interactive mode.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

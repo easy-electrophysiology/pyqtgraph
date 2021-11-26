@@ -1,5 +1,7 @@
-from OpenGL.GL import *  # noqa
-from ..GLGraphicsItem import GLGraphicsItem
+from OpenGL.GL import *
+from .. GLGraphicsItem import GLGraphicsItem
+from ...Qt import QtGui
+import numpy as np
 
 __all__ = ['GLImageItem']
 
@@ -74,7 +76,6 @@ class GLImageItem(GLGraphicsItem):
     def paint(self):
         if self._needUpdate:
             self._updateTexture()
-            self._needUpdate = False
         glEnable(GL_TEXTURE_2D)
         glBindTexture(GL_TEXTURE_2D, self.texture)
         
@@ -97,5 +98,5 @@ class GLImageItem(GLGraphicsItem):
         glTexCoord2f(0,1)
         glVertex3f(0, self.data.shape[1], 0)
         glEnd()
-        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_TEXTURE_3D)
                 

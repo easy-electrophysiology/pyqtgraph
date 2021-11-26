@@ -1,15 +1,15 @@
-from ..Qt import QtWidgets
+from ..Qt import QtGui, QtCore
 
 __all__ = ['LayoutWidget']
-class LayoutWidget(QtWidgets.QWidget):
+class LayoutWidget(QtGui.QWidget):
     """
     Convenience class used for laying out QWidgets in a grid.
     (It's just a little less effort to use than QGridLayout)
     """
 
     def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
-        self.layout = QtWidgets.QGridLayout()
+        QtGui.QWidget.__init__(self, parent)
+        self.layout = QtGui.QGridLayout()
         self.setLayout(self.layout)
         self.items = {}
         self.rows = {}
@@ -38,7 +38,7 @@ class LayoutWidget(QtWidgets.QWidget):
         All extra keyword arguments are passed to QLabel().
         Returns the created widget.
         """
-        text = QtWidgets.QLabel(text, **kargs)
+        text = QtGui.QLabel(text, **kargs)
         self.addWidget(text, row, col, rowspan, colspan)
         return text
         
@@ -97,3 +97,5 @@ class LayoutWidget(QtWidgets.QWidget):
         #items = []
         #for i in list(self.items.keys()):
             #self.removeItem(i)
+
+

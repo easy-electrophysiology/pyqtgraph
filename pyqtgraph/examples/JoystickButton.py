@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 JoystickButton is a button with x/y values. When the button is depressed and the
 mouse dragged, the x/y values change to follow the mouse.
@@ -5,16 +6,19 @@ When the mouse button is released, the x/y values change to 0,0 (rather like
 letting go of the joystick).
 """
 
-import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtWidgets
+import initExample ## Add path to library (just for examples; you do not need this)
 
-app = pg.mkQApp("Joystick Button Example")
-mw = QtWidgets.QMainWindow()
+from pyqtgraph.Qt import QtGui, QtCore
+import pyqtgraph as pg
+
+
+app = QtGui.QApplication([])
+mw = QtGui.QMainWindow()
 mw.resize(300,50)
 mw.setWindowTitle('pyqtgraph example: JoystickButton')
-cw = QtWidgets.QWidget()
+cw = QtGui.QWidget()
 mw.setCentralWidget(cw)
-layout = QtWidgets.QGridLayout()
+layout = QtGui.QGridLayout()
 cw.setLayout(layout)
 mw.show()
 
@@ -42,5 +46,11 @@ timer = QtCore.QTimer()
 timer.timeout.connect(update)
 timer.start(30)
     
+    
+
+
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

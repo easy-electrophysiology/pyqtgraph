@@ -1,12 +1,16 @@
+# -*- coding: utf-8 -*-
 """
 Simple logarithmic plotting test
 """
 
-import numpy as np
+import initExample ## Add path to library (just for examples; you do not need this)
 
+
+from pyqtgraph.Qt import QtGui, QtCore
+import numpy as np
 import pyqtgraph as pg
 
-app = pg.mkQApp("Log Plot Example")
+app = QtGui.QApplication([])
 
 win = pg.GraphicsLayoutWidget(show=True, title="Basic plotting examples")
 win.resize(1000,600)
@@ -26,5 +30,8 @@ p5.setLabel('bottom', "Y Axis", units='s')
 p5.setLogMode(x=True, y=False)
 
 
+## Start Qt event loop unless running in interactive mode or using pyside.
 if __name__ == '__main__':
-    pg.exec()
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

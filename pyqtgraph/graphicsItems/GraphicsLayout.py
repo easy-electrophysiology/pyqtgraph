@@ -1,11 +1,10 @@
+from ..Qt import QtGui, QtCore
 from .. import functions as fn
-from ..Qt import QtWidgets
 from .GraphicsWidget import GraphicsWidget
-from .LabelItem import LabelItem
-from .PlotItem import PlotItem
-
 ## Must be imported at the end to avoid cyclic-dependency hell:
 from .ViewBox import ViewBox
+from .PlotItem import PlotItem
+from .LabelItem import LabelItem
 
 __all__ = ['GraphicsLayout']
 class GraphicsLayout(GraphicsWidget):
@@ -14,21 +13,20 @@ class GraphicsLayout(GraphicsWidget):
     This is usually created automatically as part of a :class:`GraphicsWindow <pyqtgraph.GraphicsWindow>` or :class:`GraphicsLayoutWidget <pyqtgraph.GraphicsLayoutWidget>`.
     """
 
+
     def __init__(self, parent=None, border=None):
         GraphicsWidget.__init__(self, parent)
         if border is True:
             border = (100,100,100)
-        elif border is False:
-            border = None  
         self.border = border
-        self.layout = QtWidgets.QGraphicsGridLayout()
+        self.layout = QtGui.QGraphicsGridLayout()
         self.setLayout(self.layout)
         self.items = {}  ## item: [(row, col), (row, col), ...]  lists all cells occupied by the item
         self.rows = {}   ## row: {col1: item1, col2: item2, ...}    maps cell location to item
-        self.itemBorders = {}  ## {item1: QtWidgets.QGraphicsRectItem, ...} border rects
+        self.itemBorders = {}  ## {item1: QtGui.QGraphicsRectItem, ...} border rects
         self.currentRow = 0
         self.currentCol = 0
-        self.setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding))
     
     #def resizeEvent(self, ev):
         #ret = GraphicsWidget.resizeEvent(self, ev)
@@ -125,7 +123,7 @@ class GraphicsLayout(GraphicsWidget):
                 self.rows[row2][col2] = item
                 self.items[item].append((row2, col2))
 
-        borderRect = QtWidgets.QGraphicsRectItem()
+        borderRect = QtGui.QGraphicsRectItem()
 
         borderRect.setParentItem(self)
         borderRect.setZValue(1e3)

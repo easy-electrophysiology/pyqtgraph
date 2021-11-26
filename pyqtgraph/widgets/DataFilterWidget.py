@@ -1,10 +1,9 @@
-from collections import OrderedDict
-
-import numpy as np
-
-from .. import functions as fn
+from ..Qt import QtGui, QtCore
 from .. import parametertree as ptree
-from ..Qt import QtCore
+import numpy as np
+from ..pgcollections import OrderedDict
+from .. import functions as fn
+from ..python2_3 import basestring
 
 __all__ = ['DataFilterWidget']
 
@@ -60,8 +59,6 @@ class DataFilterParameter(ptree.types.GroupParameter):
             child = self.addChild(RangeFilterItem(name, self.fields[name]))
         elif mode == 'enum':
             child = self.addChild(EnumFilterItem(name, self.fields[name]))
-        else:
-            raise ValueError("field mode must be 'range' or 'enum'")
         return child
             
     def fieldNames(self):
@@ -133,7 +130,7 @@ class RangeFilterItem(ptree.types.SimpleParameter):
         ptree.types.SimpleParameter.__init__(self, 
             name=name, autoIncrementName=True, type='bool', value=True, removable=True, renamable=True, 
             children=[
-                #dict(name="Field", type='list', value=name, limits=fields),
+                #dict(name="Field", type='list', value=name, values=fields),
                 dict(name='Min', type='float', value=0.0, suffix=units, siPrefix=True),
                 dict(name='Max', type='float', value=1.0, suffix=units, siPrefix=True),
             ])
@@ -198,7 +195,7 @@ class EnumFilterItem(ptree.types.SimpleParameter):
             if isinstance(valopts, bool):
                 enabled = valopts
                 vname = str(val)
-            elif isinstance(valopts, str):
+            elif isinstance(valopts, basestring):
                 enabled = True
                 vname = valopts
             elif isinstance(valopts, tuple):
