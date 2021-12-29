@@ -20,7 +20,8 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='',
+                 fixedHeight=None, fixedWidth=None, **args):
         """
         =============== ===============================================================
         **Arguments:**
@@ -78,8 +79,8 @@ class AxisItem(GraphicsWidget):
 
         # If the user specifies a width / height, remember that setting
         # indefinitely.
-        self.fixedWidth = None
-        self.fixedHeight = None
+        self.fixedWidth = fixedWidth
+        self.fixedHeight = fixedHeight
 
         self.labelText = text
         self.labelUnits = units
@@ -766,6 +767,15 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
 
+        # JZ added 15022021 to remove thick line of start ticks
+        try:
+            top_level_tick = ticks[0][1]
+            new_ticks = ticks
+            new_ticks[0] = (ticks[0][0], [])
+            new_ticks[-1] = (ticks[-1][0], ticks[-1][1] + top_level_tick)
+            ticks = new_ticks
+        except:
+            pass
 
         #nticks = []
         #for t in ticks:

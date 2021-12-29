@@ -56,9 +56,9 @@ class Exporter(object):
         exportDir = LastExportDirectory
         if exportDir is not None:
             self.fileDialog.setDirectory(exportDir)
-        self.fileDialog.show()
         self.fileDialog.opts = opts
         self.fileDialog.fileSelected.connect(self.fileSaveFinished)
+        self.fileDialog.exec_()
         return
         
     def fileSaveFinished(self, fileName):

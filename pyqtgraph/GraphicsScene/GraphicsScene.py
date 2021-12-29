@@ -239,14 +239,16 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 if self.sendDragEvent(ev, final=True):
                     #print "sent drag event"
                     ev.accept()
-                self.dragButtons.remove(ev.button())
+                if ev.button() in self.dragButtons:  # JZ added 30122020 as if rapidly clicking with some lag on box drawn this could get out of order.
+                    self.dragButtons.remove(ev.button())
             else:
                 cev = [e for e in self.clickEvents if int(e.button()) == int(ev.button())]
                 if cev:
                     if self.sendClickEvent(cev[0]):
                         #print "sent click event"
                         ev.accept()
-                    self.clickEvents.remove(cev[0])
+                    if cev[0] in self.clickEvents:
+                        self.clickEvents.remove(cev[0])  # JZ added 30122020 as if rapidly clicking with some lag on box drawn this could get out of order.
                 
         if int(ev.buttons()) == 0:
             self.dragItem = None
@@ -559,10 +561,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.contextMenuItem = event.acceptedItem
         return self.contextMenu
 
-    def showExportDialog(self):
+    def showExportDialog(self, parent=None):
         if self.exportDialog is None:
             from . import exportDialog
-            self.exportDialog = exportDialog.ExportDialog(self)
+            self.exportDialog = exportDialog.ExportDialog(self, parent)
         self.exportDialog.show(self.contextMenuItem)
 
     @staticmethod
