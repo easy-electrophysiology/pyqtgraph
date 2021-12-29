@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import sys
+import warnings
 import weakref
 import numpy as np
 import os
@@ -229,6 +230,8 @@ class PlotItem(GraphicsWidget):
         c.fftCheck.toggled.connect(self.updateSpectrumMode)
         c.logXCheck.toggled.connect(self.updateLogMode)
         c.logYCheck.toggled.connect(self.updateLogMode)
+        c.derivativeCheck.toggled.connect(self.updateDerivativeMode)
+        c.phasemapCheck.toggled.connect(self.updatePhasemapMode)
 
         c.downsampleSpin.valueChanged.connect(self.updateDownsampling)
         c.downsampleCheck.toggled.connect(self.updateDownsampling)
@@ -304,7 +307,7 @@ class PlotItem(GraphicsWidget):
         # Array containing visible axis items
         # Also containing potentially hidden axes, but they are not touched so it does not matter
         visibleAxes = ['left', 'bottom']
-        visibleAxes.append(axisItems.keys()) # Note that it does not matter that this adds
+        visibleAxes.extend(axisItems.keys()) # Note that it does not matter that this adds
                                              # some values to visibleAxes a second time
         
         for k, pos in (('top', (1,1)), ('bottom', (3,1)), ('left', (2,0)), ('right', (2,2))):
@@ -322,8 +325,11 @@ class PlotItem(GraphicsWidget):
             if k in axisItems:
                 axis = axisItems[k]
                 if axis.scene() is not None:
-                    if axis != self.axes[k]["item"]:
-                        raise RuntimeError("Can't add an axis to multiple plots.")
+                    if k not in self.axes or axis != self.axes[k]["item"]:
+                        raise RuntimeError(
+                            "Can't add an axis to multiple plots. Shared axes"
+                            " can be achieved with multiple AxisItem instances"
+                            " and set[X/Y]Link.")
             else:
                 axis = AxisItem(orientation=k, parent=self)
             
@@ -514,6 +520,9 @@ class PlotItem(GraphicsWidget):
         If the item has plot data (PlotDataItem, PlotCurveItem, ScatterPlotItem), it may
         be included in analysis performed by the PlotItem.
         """
+        if item in self.items:
+            warnings.warn('Item already added to PlotItem, ignoring.')
+            return
         self.items.append(item)
         vbargs = {}
         if 'ignoreBounds' in kargs:
@@ -656,6 +665,7 @@ class PlotItem(GraphicsWidget):
 
         Accepts the same arguments as :meth:`~pyqtgraph.LegendItem`.
         """
+
         if self.legend is None:
             self.legend = LegendItem(offset=offset, **kwargs)
             self.legend.setParentItem(self.vb)
@@ -893,6 +903,23 @@ class PlotItem(GraphicsWidget):
         self.getAxis('right').setLogMode(y)
         self.enableAutoRange()
         self.recomputeAverages()
+    
+    def updateDerivativeMode(self):
+        d = self.ctrl.derivativeCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setDerivativeMode'):
+                i.setDerivativeMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+
+    def updatePhasemapMode(self):
+        d = self.ctrl.phasemapCheck.isChecked()
+        for i in self.items:
+            if hasattr(i, 'setPhasemapMode'):
+                i.setPhasemapMode(d)
+        self.enableAutoRange()
+        self.recomputeAverages()
+        
         
     def setDownsampling(self, ds=None, auto=None, mode=None):
         """Change the default downsampling mode for all PlotDataItems managed by this plot.

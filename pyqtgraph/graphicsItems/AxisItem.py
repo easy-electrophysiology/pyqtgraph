@@ -14,15 +14,15 @@ __all__ = ['AxisItem']
 class AxisItem(GraphicsWidget):
     """
     GraphicsItem showing a single plot axis with ticks, values, and label.
-    Can be configured to fit on any side of a plot, and can automatically synchronize its displayed scale with ViewBox items.
+    Can be configured to fit on any side of a plot, 
+    Can automatically synchronize its displayed scale with ViewBox items.
     Ticks can be extended to draw a grid.
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='',
-                 fixedHeight=None, fixedWidth=None, **args):
+    def __init__(self, orientation, pen=None, textPen=None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
         """
-        ==============  ===============================================================
+        =============== ===============================================================
         **Arguments:**
         orientation     one of 'left', 'right', 'top', or 'bottom'
         maxTickLength   (px) maximum length of ticks to draw. Negative values draw
@@ -40,7 +40,7 @@ class AxisItem(GraphicsWidget):
                         range of data displayed.
         args            All extra keyword arguments become CSS style options for
                         the <span> tag which will surround the axis label and units.
-        ==============  ===============================================================
+        =============== ===============================================================
         """
 
         GraphicsWidget.__init__(self, parent)
@@ -57,6 +57,7 @@ class AxisItem(GraphicsWidget):
             'tickTextWidth': 30,  ## space reserved for tick text
             'tickTextHeight': 18,
             'autoExpandTextSpace': True,  ## automatically expand text space if needed
+            'autoReduceTextSpace': True,
             'tickFont': None,
             'stopAxisAtTick': (False, False),  ## whether axis is drawn to edge of box or to last tick
             'textFillLimits': [  ## how much of the axis to fill up with tick text, maximally.
@@ -69,6 +70,7 @@ class AxisItem(GraphicsWidget):
             'tickLength': maxTickLength,
             'maxTickLevel': 2,
             'maxTextLevel': 2,
+            'tickAlpha': None,  ## If not none, use this alpha for all ticks.
         }
 
         self.textWidth = 30  ## Keeps track of maximum width / height of tick text
@@ -76,8 +78,8 @@ class AxisItem(GraphicsWidget):
 
         # If the user specifies a width / height, remember that setting
         # indefinitely.
-        self.fixedWidth = fixedWidth
-        self.fixedHeight = fixedHeight
+        self.fixedWidth = None
+        self.fixedHeight = None
 
         self.labelText = text
         self.labelUnits = units
@@ -126,6 +128,7 @@ class AxisItem(GraphicsWidget):
         tickTextHeight      (int) Vertical space reserved for tick text in px
         autoExpandTextSpace (bool) Automatically expand text space if the tick
                             strings become too long.
+        autoReduceTextSpace (bool) Automatically shrink the axis if necessary 
         tickFont            (QFont or None) Determines the font used for tick
                             values. Use None for the default font.
         stopAxisAtTick      (tuple: (bool min, bool max)) If True, the axis
@@ -149,6 +152,11 @@ class AxisItem(GraphicsWidget):
 
         showValues          (bool) indicates whether text is displayed adjacent
                             to ticks.
+        tickAlpha           (float or int or None) If None, pyqtgraph will draw the
+                            ticks with the alpha it deems appropriate.  Otherwise, 
+                            the alpha will be fixed at the value passed.  With int, 
+                            accepted values are [0..255].  With vaule of type
+                            float, accepted values are from [0..1].
         =================== =======================================================
 
         Added in version 0.9.9
@@ -276,19 +284,19 @@ class AxisItem(GraphicsWidget):
             axis.setLabel('label text', units='V', **labelStyle)
 
         """
-        show_label = False
-        if text is not None:
-            self.labelText = text
-            show_label = True
-        if units is not None:
-            self.labelUnits = units
-            show_label = True
-        if show_label:
-            self.showLabel()
-        if unitPrefix is not None:
-            self.labelUnitPrefix = unitPrefix
+        # `None` input is kept for backward compatibility!
+        self.labelText = text or ""
+        self.labelUnits = units or ""
+        self.labelUnitPrefix = unitPrefix or ""
         if len(args) > 0:
             self.labelStyle = args
+        # Account empty string and `None` for units and text
+        visible = True if (text or units) else False
+        self.showLabel(visible)
+        self._updateLabel()
+
+    def _updateLabel(self):
+        """Internal method to update the label according to the text"""
         self.label.setHtml(self.labelString())
         self._adjustSize()
         self.picture = None
@@ -315,19 +323,26 @@ class AxisItem(GraphicsWidget):
         ## changed; we use this to decide whether the item needs to be resized
         ## to accomodate.
         if self.orientation in ['left', 'right']:
-            mx = max(self.textWidth, x)
-            if mx > self.textWidth or mx < self.textWidth-10:
-                self.textWidth = mx
-                if self.style['autoExpandTextSpace'] is True:
-                    self._updateWidth()
-                    #return True  ## size has changed
+            if self.style["autoReduceTextSpace"]:
+                if x > self.textWidth or x < self.textWidth - 10:
+                    self.textWidth = x
+            else:
+                mx = max(self.textWidth, x)
+                if mx > self.textWidth or mx < self.textWidth - 10:
+                    self.textWidth = mx
+            if self.style['autoExpandTextSpace']:
+                self._updateWidth()
+        
         else:
-            mx = max(self.textHeight, x)
-            if mx > self.textHeight or mx < self.textHeight-10:
-                self.textHeight = mx
-                if self.style['autoExpandTextSpace'] is True:
-                    self._updateHeight()
-                    #return True  ## size has changed
+            if self.style['autoReduceTextSpace']:
+                if x > self.textHeight or x < self.textHeight - 10:
+                    self.textHeight = x
+            else:
+                mx = max(self.textHeight, x)
+                if mx > self.textHeight or mx < self.textHeight - 10:
+                    self.textHeight = mx
+            if self.style['autoExpandTextSpace']:
+                self._updateHeight()
 
     def _adjustSize(self):
         if self.orientation in ['left', 'right']:
@@ -351,7 +366,7 @@ class AxisItem(GraphicsWidget):
             if self.fixedHeight is None:
                 if not self.style['showValues']:
                     h = 0
-                elif self.style['autoExpandTextSpace'] is True:
+                elif self.style['autoExpandTextSpace']:
                     h = self.textHeight
                 else:
                     h = self.style['tickTextHeight']
@@ -382,7 +397,7 @@ class AxisItem(GraphicsWidget):
             if self.fixedWidth is None:
                 if not self.style['showValues']:
                     w = 0
-                elif self.style['autoExpandTextSpace'] is True:
+                elif self.style['autoExpandTextSpace']:
                     w = self.textWidth
                 else:
                     w = self.style['tickTextWidth']
@@ -414,8 +429,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._pen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._pen.color())[:6]
-        self.setLabel()
-        self.update()
+        self._updateLabel()
 
     def textPen(self):
         if self._textPen is None:
@@ -433,8 +447,7 @@ class AxisItem(GraphicsWidget):
         else:
             self._textPen = fn.mkPen(getConfigOption('foreground'))
         self.labelStyle['color'] = '#' + fn.colorStr(self._textPen.color())[:6]
-        self.setLabel()
-        self.update()
+        self._updateLabel()
 
     def setScale(self, scale=None):
         """
@@ -451,9 +464,7 @@ class AxisItem(GraphicsWidget):
 
         if scale != self.scale:
             self.scale = scale
-            self.setLabel()
-            self.picture = None
-            self.update()
+            self._updateLabel()
 
     def enableAutoSIPrefix(self, enable=True):
         """
@@ -484,13 +495,11 @@ class AxisItem(GraphicsWidget):
                 scale = 1.0
                 prefix = ''
             self.autoSIPrefixScale = scale
-            self.setLabel(unitPrefix=prefix)
+            self.labelUnitPrefix = prefix
         else:
             self.autoSIPrefixScale = 1.0
 
-        self.picture = None
-        self.update()
-
+        self._updateLabel()
 
     def setRange(self, mn, mx):
         """Set the range of values displayed by the axis.
@@ -499,9 +508,11 @@ class AxisItem(GraphicsWidget):
             raise Exception("Not setting range to [%s, %s]" % (str(mn), str(mx)))
         self.range = [mn, mx]
         if self.autoSIPrefix:
+            # XXX: Will already update once!
             self.updateAutoSIPrefix()
-        self.picture = None
-        self.update()
+        else:
+            self.picture = None
+            self.update()
 
     def linkedView(self):
         """Return the ViewBox this axis is linked to"""
@@ -509,7 +520,6 @@ class AxisItem(GraphicsWidget):
             return None
         else:
             return self._linkedView()
-
 
     def linkToView(self, view):
         """Link this axis to a ViewBox, causing its displayed range to match the visible range of the view."""
@@ -572,13 +582,14 @@ class AxisItem(GraphicsWidget):
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
 
-
     def paint(self, p, opt, widget):
         profiler = debug.Profiler()
         if self.picture is None:
             try:
                 picture = QtGui.QPicture()
                 painter = QtGui.QPainter(picture)
+                if self.style["tickFont"]:
+                    painter.setFont(self.style["tickFont"])
                 specs = self.generateDrawSpecs(painter)
                 profiler('generate specs')
                 if specs is not None:
@@ -637,7 +648,6 @@ class AxisItem(GraphicsWidget):
         self._tickSpacing = levels
         self.picture = None
         self.update()
-
 
     def tickSpacing(self, minVal, maxVal, size):
         """Return values describing the desired spacing and offset of ticks.
@@ -756,15 +766,6 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
 
-        # JZ added 15022021 to remove thick line of start ticks
-        try:
-            top_level_tick = ticks[0][1]
-            new_ticks = ticks
-            new_ticks[0] = (ticks[0][0], [])
-            new_ticks[-1] = (ticks[-1][0], ticks[-1][1] + top_level_tick)
-            ticks = new_ticks
-        except:
-            pass
 
         #nticks = []
         #for t in ticks:
@@ -865,8 +866,8 @@ class AxisItem(GraphicsWidget):
         interpreted by drawPicture().
         """
         profiler = debug.Profiler()
-
-        #bounds = self.boundingRect()
+        if self.style['tickFont'] is not None:
+            p.setFont(self.style['tickFont'])
         bounds = self.mapRectFromParent(self.geometry())
 
         linkedView = self.linkedView()
@@ -956,10 +957,21 @@ class AxisItem(GraphicsWidget):
 
             ## length of tick
             tickLength = self.style['tickLength'] / ((i*0.5)+1.0)
-
-            lineAlpha = 255 / (i+1)
-            if self.grid is not False:
-                lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+                
+            lineAlpha = self.style["tickAlpha"]
+            if lineAlpha is None:
+                lineAlpha = 255 / (i+1)
+                if self.grid is not False:
+                    lineAlpha *= self.grid/255. * np.clip((0.05  * lengthInPixels / (len(ticks)+1)), 0., 1.)
+            elif isinstance(lineAlpha, float):
+                lineAlpha *= 255
+                lineAlpha = max(0, int(round(lineAlpha)))
+                lineAlpha = min(255, int(round(lineAlpha)))
+            elif isinstance(lineAlpha, int):
+                if (lineAlpha > 255) or (lineAlpha < 0):
+                    raise ValueError("lineAlpha should be [0..255]")
+            else:
+                raise TypeError("Line Alpha should be of type None, float or int")
 
             for v in ticks:
                 ## determine actual position to draw this tick
@@ -1011,6 +1023,7 @@ class AxisItem(GraphicsWidget):
             #textHeight = self.style['tickTextHeight'] ## space allocated for horizontal text
 
         textSize2 = 0
+        lastTextSize2 = 0
         textRects = []
         textSpecs = []  ## list of draw
 
@@ -1072,6 +1085,8 @@ class AxisItem(GraphicsWidget):
                         break
                 if finished:
                     break
+            
+            lastTextSize2 = textSize2
 
             #spacing, values = tickLevels[best]
             #strings = self.tickStrings(values, self.scale, spacing)
@@ -1107,7 +1122,7 @@ class AxisItem(GraphicsWidget):
         profiler('compute text')
 
         ## update max text size if needed.
-        self._updateMaxTextSize(textSize2)
+        self._updateMaxTextSize(lastTextSize2)
 
         return (axisSpec, tickSpecs, textSpecs)
 
@@ -1133,6 +1148,8 @@ class AxisItem(GraphicsWidget):
         if self.style['tickFont'] is not None:
             p.setFont(self.style['tickFont'])
         p.setPen(self.textPen())
+        bounding = self.boundingRect().toAlignedRect()
+        p.setClipRect(bounding)
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)
 

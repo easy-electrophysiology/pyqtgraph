@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import time
 import weakref
 import warnings
 
@@ -8,11 +9,17 @@ from .. import functions as fn
 from .. import ptime as ptime
 from .mouseEvents import *
 from .. import debug as debug
+from .. import getConfigOption
+
+getMillis = lambda: int(round(time.time() * 1000))
 
 
 if hasattr(QtCore, 'PYQT_VERSION'):
     try:
-        import sip
+        try:
+            from PyQt5 import sip
+        except ImportError:
+            import sip
         HAVE_SIP = True
     except ImportError:
         HAVE_SIP = False
@@ -39,7 +46,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
     *  Eats mouseMove events that occur too soon after a mouse press.
     *  Reimplements items() and itemAt() to circumvent PyQt bug
 
-    ====================== ==================================================================
+    ====================== ====================================================================
     **Signals**
     sigMouseClicked(event) Emitted when the mouse is clicked over the scene. Use ev.pos() to
                            get the click position relative to the item that was clicked on,
@@ -49,7 +56,9 @@ class GraphicsScene(QtGui.QGraphicsScene):
                            is given in scene coordinates.
     sigMouseHover(items)   Emitted when the mouse is moved over the scene. Items is a list
                            of items under the cursor.
-    ====================== ==================================================================
+    sigItemAdded(item)     Emitted when an item is added via addItem(). The item is given.
+    sigItemRemoved(item)   Emitted when an item is removed via removeItem(). The item is given.
+    ====================== ====================================================================
     
     Mouse interaction is as follows:
     
@@ -83,7 +92,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
     sigMouseClicked = QtCore.Signal(object)   ## emitted when mouse is clicked. Check for event.isAccepted() to see whether the event has already been acted on.
     
     sigPrepareForPaint = QtCore.Signal()  ## emitted immediately before the scene is about to be rendered
-    
+
+    sigItemAdded = QtCore.Signal(object)  ## emits the item object just added
+    sigItemRemoved = QtCore.Signal(object)  ## emits the item object just removed
+
     _addressCache = weakref.WeakValueDictionary()
     
     ExportDirectory = None
@@ -114,6 +126,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.contextMenu[0].triggered.connect(self.showExportDialog)
         
         self.exportDialog = None
+        self._lastMoveEventTime = 0
         
     def render(self, *args):
         self.prepareForPaint()
@@ -161,39 +174,60 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 if i.isEnabled() and i.isVisible() and int(i.flags() & i.ItemIsFocusable) > 0:
                     i.setFocus(QtCore.Qt.MouseFocusReason)
                     break
+
+    def _moveEventIsAllowed(self):
+        # For ignoring events that are too close together
+        
+        # Max number of events per second
+        rateLimit = getConfigOption('mouseRateLimit')
+        if rateLimit <= 0:
+            return True
+        
+        # Delay between events (in milliseconds)
+        delay = 1000.0 / rateLimit
+        if getMillis() - self._lastMoveEventTime >= delay:
+            return True
+        return False
+
         
     def mouseMoveEvent(self, ev):
-        self.sigMouseMoved.emit(ev.scenePos())
-        
-        ## First allow QGraphicsScene to deliver hoverEnter/Move/ExitEvents
-        QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-        
-        ## Next deliver our own HoverEvents
-        self.sendHoverEvents(ev)
-        
-        if int(ev.buttons()) != 0:  ## button is pressed; send mouseMoveEvents and mouseDragEvents
+        # ignore high frequency events
+        if self._moveEventIsAllowed():
+            self._lastMoveEventTime = getMillis()
+            self.sigMouseMoved.emit(ev.scenePos())
+
+            # First allow QGraphicsScene to eliver hoverEvent/Move/Exit Events
             QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
-            if self.mouseGrabberItem() is None:
-                now = ptime.time()
-                init = False
-                ## keep track of which buttons are involved in dragging
-                for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MidButton, QtCore.Qt.RightButton]:
-                    if int(ev.buttons() & btn) == 0:
-                        continue
-                    if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
-                        cev = [e for e in self.clickEvents if int(e.button()) == int(btn)]
-                        if cev:
-                            cev = cev[0]
-                            dist = Point(ev.scenePos() - cev.scenePos()).length()
-                            if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
-                                continue
-                            init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
-                            self.dragButtons.append(int(btn))
-                        
-                ## If we have dragged buttons, deliver a drag event
-                if len(self.dragButtons) > 0:
-                    if self.sendDragEvent(ev, init=init):
-                        ev.accept()
+            # Next Deliver our own Hover Events
+            self.sendHoverEvents(ev)
+            if int(ev.buttons()) != 0:
+                # button is pressed' send mouseMoveEvents and mouseDragEvents
+                QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+                if self.mouseGrabberItem() is None:
+                    now = ptime.time()
+                    init = False
+                    ## keep track of which buttons are involved in dragging
+                    for btn in [QtCore.Qt.LeftButton, QtCore.Qt.MidButton, QtCore.Qt.RightButton]:
+                        if int(ev.buttons() & btn) == 0:
+                            continue
+                        if int(btn) not in self.dragButtons:  ## see if we've dragged far enough yet
+                            cev = [e for e in self.clickEvents if int(e.button()) == int(btn)]
+                            if cev:
+                                cev = cev[0]
+                                dist = Point(ev.scenePos() - cev.scenePos()).length()
+                                if dist == 0 or (dist < self._moveDistance and now - cev.time() < self.minDragTime):
+                                    continue
+                                init = init or (len(self.dragButtons) == 0)  ## If this is the first button to be dragged, then init=True
+                                self.dragButtons.append(int(btn))
+                    ## if we have dragged buttons, deliver a drag event
+                    if len(self.dragButtons) > 0:
+                        if self.sendDragEvent(ev, init=init):
+                            ev.accept()
+
+        else:
+            QtGui.QGraphicsScene.mouseMoveEvent(self, ev)
+            # if you do not accept event (which is ignored) then cursor will disappear
+            ev.accept()
                 
     def leaveEvent(self, ev):  ## inform items that mouse is gone
         if len(self.dragButtons) == 0:
@@ -205,16 +239,14 @@ class GraphicsScene(QtGui.QGraphicsScene):
                 if self.sendDragEvent(ev, final=True):
                     #print "sent drag event"
                     ev.accept()
-                if ev.button() in self.dragButtons:  # JZ added 30122020 as if rapidly clicking with some lag on box drawn this could get out of order. 
-                    self.dragButtons.remove(ev.button())
+                self.dragButtons.remove(ev.button())
             else:
                 cev = [e for e in self.clickEvents if int(e.button()) == int(ev.button())]
                 if cev:
                     if self.sendClickEvent(cev[0]):
                         #print "sent click event"
                         ev.accept()
-                    if cev[0] in self.clickEvents:
-                        self.clickEvents.remove(cev[0])   # JZ added 30122020 as if rapidly clicking with some lag on box drawn this could get out of order.
+                    self.clickEvents.remove(cev[0])
                 
         if int(ev.buttons()) == 0:
             self.dragItem = None
@@ -366,6 +398,18 @@ class GraphicsScene(QtGui.QGraphicsScene):
                             break
         self.sigMouseClicked.emit(ev)
         return ev.isAccepted()
+
+    def addItem(self, item):
+        # extend QGraphicsScene.addItem to emit a sigItemAdded signal
+        ret = QtGui.QGraphicsScene.addItem(self, item)
+        self.sigItemAdded.emit(item)
+        return ret
+
+    def removeItem(self, item):
+        # extend QGraphicsScene.removeItem to emit a sigItemRemoved signal
+        ret = QtGui.QGraphicsScene.removeItem(self, item)
+        self.sigItemRemoved.emit(item)
+        return ret
         
     def items(self, *args):
         items = QtGui.QGraphicsScene.items(self, *args)
@@ -503,7 +547,7 @@ class GraphicsScene(QtGui.QGraphicsScene):
 
         for m in menusToAdd:
             if isinstance(m, QtGui.QMenu):
-                menu.addMenu(m)
+                menu.addAction(m.menuAction())
             elif isinstance(m, QtGui.QAction):
                 menu.addAction(m)
             else:
@@ -515,10 +559,10 @@ class GraphicsScene(QtGui.QGraphicsScene):
         self.contextMenuItem = event.acceptedItem
         return self.contextMenu
 
-    def showExportDialog(self, parent=None):
+    def showExportDialog(self):
         if self.exportDialog is None:
             from . import exportDialog
-            self.exportDialog = exportDialog.ExportDialog(self, parent)
+            self.exportDialog = exportDialog.ExportDialog(self)
         self.exportDialog.show(self.contextMenuItem)
 
     @staticmethod

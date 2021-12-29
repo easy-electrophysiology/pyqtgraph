@@ -71,7 +71,15 @@ class ColorMapParameter(ptree.types.GroupParameter):
         defaults = fieldSpec.get('defaults', {})
         for k, v in defaults.items():
             if k == 'colormap':
-                item.setValue(v)
+                if mode == 'range':
+                    item.setValue(v)
+                elif mode == 'enum':
+                    children = item.param('Values').children()
+                    for i, child in enumerate(children):
+                        try:
+                            child.setValue(v[i])
+                        except IndexError('No default color set for child %s' % child.name()):
+                            continue
             else:
                 item[k] = v
 
@@ -79,7 +87,7 @@ class ColorMapParameter(ptree.types.GroupParameter):
         return item
         
     def fieldNames(self):
-        return self.fields.keys()
+        return list(self.fields.keys())
     
     def setFields(self, fields):
         """

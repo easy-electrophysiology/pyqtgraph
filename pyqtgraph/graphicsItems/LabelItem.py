@@ -127,14 +127,10 @@ class LabelItem(GraphicsWidget, GraphicsWidgetAnchor):
         self.updateGeometry()
         
     def sizeHint(self, hint, constraint):
-        try:
-            if hint not in self._sizeHint:
-                return QtCore.QSizeF(0, 0)
-            return QtCore.QSizeF(*self._sizeHint[hint])
-        except:
-            print('sizeHint error')
-            breakpoint()
-
+        if hint not in self._sizeHint:
+            return QtCore.QSizeF(0, 0)
+        return QtCore.QSizeF(*self._sizeHint[hint])
+        
     def itemRect(self):
         return self.item.mapRectToParent(self.item.boundingRect())
         

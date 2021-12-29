@@ -4,7 +4,7 @@ PyQtGraph - Scientific Graphics and GUI Library for Python
 www.pyqtgraph.org
 """
 
-__version__ = '0.11.0'
+__version__ = '0.11.1'
 
 ### import all the goodies and add some helper functions for easy CLI use
 
@@ -56,6 +56,7 @@ CONFIG_OPTIONS = {
     'exitCleanup': True,    ## Attempt to work around some exit crash bugs in PyQt and PySide
     'enableExperimental': False, ## Enable experimental features (the curious can search for this key in the code)
     'crashWarning': False,  # If True, print warnings about situations that may result in a crash
+    'mouseRateLimit': 100,  # For ignoring frequent mouse events, max number of mouse move events per second, if <= 0, then it is switched off
     'imageAxisOrder': 'col-major',  # For 'row-major', image data is expected in the standard (row, col) order.
                                  # For 'col-major', image data is expected in reversed (col, row) order.
                                  # The default is 'col-major' for backward compatibility, but this may
@@ -218,6 +219,7 @@ from .graphicsItems.BarGraphItem import *
 from .graphicsItems.ViewBox import * 
 from .graphicsItems.ArrowItem import * 
 from .graphicsItems.ImageItem import * 
+from .graphicsItems.PColorMeshItem import * 
 from .graphicsItems.AxisItem import * 
 from .graphicsItems.DateAxisItem import *
 from .graphicsItems.LabelItem import * 
@@ -277,6 +279,7 @@ from .SignalProxy import *
 from .colormap import *
 from .ptime import time
 from .Qt import isQObjectAlive
+from .ThreadsafeTimer import *
 
 
 ##############################################################

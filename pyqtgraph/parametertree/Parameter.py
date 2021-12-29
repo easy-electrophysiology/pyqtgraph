@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..Qt import QtGui, QtCore
 import os, weakref, re
 from ..pgcollections import OrderedDict
@@ -188,13 +189,11 @@ class Parameter(QtCore.QObject):
         
         self.addChildren(self.opts.pop('children', []))
         
-        self.opts['value'] = None
         if value is not None:
             self.setValue(value)
 
         if 'default' not in self.opts:
             self.opts['default'] = None
-            self.setDefault(self.opts['value'])
     
         ## Connect all state changed signals to the general sigStateChanged
         self.sigValueChanged.connect(lambda param, data: self.emitStateChanged('value', data))
@@ -213,6 +212,16 @@ class Parameter(QtCore.QObject):
     def name(self):
         """Return the name of this Parameter."""
         return self.opts['name']
+
+    def title(self):
+        """Return the title of this Parameter.
+        
+        By default, the title is the same as the name unless it has been explicitly specified
+        otherwise."""
+        title = self.opts.get('title', None)
+        if title is None:
+            title = self.name()
+        return title
 
     def contextMenu(self, name):
         """"A context menu entry was clicked"""
@@ -420,7 +429,7 @@ class Parameter(QtCore.QObject):
 
     def hasDefault(self):
         """Returns True if this parameter has a default value."""
-        return 'default' in self.opts
+        return self.opts['default'] is not None
         
     def valueIsDefault(self):
         """Returns True if this parameter's value is equal to the default value."""

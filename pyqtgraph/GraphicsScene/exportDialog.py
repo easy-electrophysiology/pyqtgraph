@@ -8,16 +8,15 @@ if QT_LIB == 'PySide':
     from . import exportDialogTemplate_pyside as exportDialogTemplate
 elif QT_LIB == 'PySide2':
     from . import exportDialogTemplate_pyside2 as exportDialogTemplate
-    from PySide2 import QtWidgets
 elif QT_LIB == 'PyQt5':
     from . import exportDialogTemplate_pyqt5 as exportDialogTemplate
 else:
     from . import exportDialogTemplate_pyqt as exportDialogTemplate
 
 
-class ExportDialog(QtWidgets.QDialog):
-    def __init__(self, scene, parent):
-        QtWidgets.QDialog.__init__(self, parent=parent)
+class ExportDialog(QtGui.QWidget):
+    def __init__(self, scene):
+        QtGui.QWidget.__init__(self)
         self.setVisible(False)
         self.setWindowTitle("Export")
         self.shown = False
