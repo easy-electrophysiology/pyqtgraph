@@ -12,9 +12,9 @@ class FormatExportListWidgetItem(QtWidgets.QListWidgetItem):
         self.expClass = expClass
 
 
-class ExportDialog(QtWidgets.QWidget):
+class ExportDialog(QtWidgets.QDialog):
     def __init__(self, scene):
-        QtWidgets.QWidget.__init__(self)
+        QtWidgets.QDialog.__init__(self)
         self.setVisible(False)
         self.setWindowTitle("Export")
         self.shown = False
