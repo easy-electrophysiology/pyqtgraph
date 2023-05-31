@@ -67,7 +67,10 @@ class ChildGroup(ItemGroup):
                 pass
             else:
                 for listener in itemsChangedListeners:
-                    listener.itemsChanged()
+                    try:
+                        listener.itemsChanged()
+                    except RuntimeError:  # JZ added 26/05/2023
+                        pass
         return ret
 
 
