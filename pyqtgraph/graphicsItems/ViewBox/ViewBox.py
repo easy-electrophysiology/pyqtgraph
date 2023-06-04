@@ -1282,9 +1282,11 @@ class ViewBox(GraphicsWidget):
     def wheelEvent(self, ev, axis=None):
         if axis in (0, 1):
             mask = [False, False]
-            mask[axis] = self.state['mouseEnabled'][axis]
         else:
-            mask = self.state['mouseEnabled'][:]
+            mask =[True, True]
+        #    mask[axis] = self.state['mouseEnabled'][axis]
+        # else:
+        #     mask = self.state['mouseEnabled'][:]
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         s = [(None if m is False else s) for m in mask]
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
