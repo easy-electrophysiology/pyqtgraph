@@ -20,7 +20,7 @@ class AxisItem(GraphicsWidget):
     If maxTickLength is negative, ticks point into the plot.
     """
 
-    def __init__(self, orientation, pen=None, textPen=None, tickPen = None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', **args):
+    def __init__(self, orientation, pen=None, textPen=None, tickPen = None, linkView=None, parent=None, maxTickLength=-5, showValues=True, text='', units='', unitPrefix='', fixedHeight=None, fixedWidth=None, transparantAxis=False, **args):
         """
         =============== ===============================================================
         **Arguments:**
@@ -80,8 +80,9 @@ class AxisItem(GraphicsWidget):
 
         # If the user specifies a width / height, remember that setting
         # indefinitely.
-        self.fixedWidth = None
-        self.fixedHeight = None
+        self.fixedWidth = fixedWidth
+        self.fixedHeight = fixedHeight
+        self.transparantAxis = transparantAxis
 
         self.labelText = text
         self.labelUnits = units
@@ -638,7 +639,7 @@ class AxisItem(GraphicsWidget):
             elif self.orientation == 'top':
                 rect = rect.adjusted(-15, 0, 15, -min(0,tl))
             elif self.orientation == 'bottom':
-                rect = rect.adjusted(-m, min(0,tl), m, 0)
+                rect = rect.adjusted(min(-m, -5), min(0,tl), m, 0)  # JZ Added, see plotgraphs docstring
             return rect
         else:
             return self.mapRectFromParent(self.geometry()) | linkedView.mapRectToItem(self, linkedView.boundingRect())
@@ -831,6 +832,14 @@ class AxisItem(GraphicsWidget):
         if self.logMode:
             return self.logTickValues(minVal, maxVal, size, ticks)
 
+        try:
+            top_level_tick = ticks[0][1]
+            new_ticks = ticks
+            new_ticks[0] = (ticks[0][0], [])
+            new_ticks[-1] = (ticks[-1][0], ticks[-1][1] + top_level_tick)
+            ticks = new_ticks
+        except:
+            pass
 
         #nticks = []
         #for t in ticks:
@@ -1204,7 +1213,8 @@ class AxisItem(GraphicsWidget):
         ## draw long line along axis
         pen, p1, p2 = axisSpec
         p.setPen(pen)
-        p.drawLine(p1, p2)
+        if not self.transparantAxis:  # JZ Added see plotgraphs docstring.
+            p.drawLine(p1, p2)
         # p.translate(0.5,0)  ## resolves some damn pixel ambiguity
 
         ## draw ticks
@@ -1219,6 +1229,7 @@ class AxisItem(GraphicsWidget):
         p.setPen(self.textPen())
         bounding = self.boundingRect().toAlignedRect()
         p.setClipRect(bounding)
+
         for rect, flags, text in textSpecs:
             p.drawText(rect, int(flags), text)
 
