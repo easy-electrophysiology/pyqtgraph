@@ -216,14 +216,17 @@ class GraphicsScene(QtWidgets.QGraphicsScene):
                 if self.sendDragEvent(ev, final=True):
                     #print "sent drag event"
                     ev.accept()
-                self.dragButtons.remove(ev.button())
+                if ev.button() in self.dragButtons:  # JZ added 30122020 as if rapidly clicking with some lag on box drawn this could get out of order.
+                    self.dragButtons.remove(ev.button())
             else:
                 cev = [e for e in self.clickEvents if e.button() == ev.button()]
                 if cev:
                     if self.sendClickEvent(cev[0]):
                         ev.accept()
                     try:
-                        self.clickEvents.remove(cev[0])
+                        if cev[0] in self.clickEvents:
+                            # JZ added 30122020 as if rapidly clicking with some lag on box drawn this could get out of order.
+                            self.clickEvents.remove(cev[0])
                     except ValueError:
                         warnings.warn(
                             ("A ValueError can occur here with errant "
