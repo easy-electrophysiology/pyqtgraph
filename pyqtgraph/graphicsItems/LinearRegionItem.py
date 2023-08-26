@@ -316,11 +316,14 @@ class LinearRegionItem(GraphicsObject):
             
         if not self.moving:
             return
-            
-        self.lines[0].blockSignals(True)  # only want to update once
+
+        # JZ: change because this lead to the left / right bounds
+        # a) starting to move
+        # b) not updating the time as it is dragged.
+        # self.lines[0].blockSignals(True)  # only want to update once
         for i, l in enumerate(self.lines):
             l.setPos(self.cursorOffsets[i] + ev.pos())
-        self.lines[0].blockSignals(False)
+        # self.lines[0].blockSignals(False)
         self.prepareGeometryChange()
         
         if ev.isFinish():
