@@ -1291,12 +1291,13 @@ class ViewBox(GraphicsWidget):
         #    mask[axis] = self.state['mouseEnabled'][axis]
         # else:
         #     mask = self.state['mouseEnabled'][:]
-        if axis_new == "both":
-            mask = [True, True]
-        elif axis_new == "x":
-            mask = [True, False]
-        elif axis_new == "y":
-            mask = [False, True]
+        else:
+            if axis_new == "both":
+                mask = [True, True]
+            elif axis_new == "x":
+                mask = [True, False]
+            elif axis_new == "y":
+                mask = [False, True]
 
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         s = [(None if m is False else s) for m in mask]
