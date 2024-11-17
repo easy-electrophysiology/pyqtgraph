@@ -1279,14 +1279,25 @@ class ViewBox(GraphicsWidget):
         """Return the bounding rect of the item in view coordinates"""
         return self.mapSceneToView(item.sceneBoundingRect()).boundingRect()
 
-    def wheelEvent(self, ev, axis=None):
+    def wheelEvent(self, ev, axis=None, axis_new="both"):
+        """
+        Edited by JZ 17/11/2024 for v2.7.4 to allow
+        x, y specific axis zooming with zoom wheel.
+        """
         if axis in (0, 1):
             mask = [False, False]
-        else:
-            mask =[True, True]
+        #    else:
+        #       mask =[True, True]
         #    mask[axis] = self.state['mouseEnabled'][axis]
         # else:
         #     mask = self.state['mouseEnabled'][:]
+        if axis_new == "both":
+            mask = [True, True]
+        elif axis_new == "x":
+            mask = [True, False]
+        elif axis_new == "y":
+            mask = [False, True]
+
         s = 1.02 ** (ev.delta() * self.state['wheelScaleFactor']) # actual scaling factor
         s = [(None if m is False else s) for m in mask]
         center = Point(fn.invertQTransform(self.childGroup.transform()).map(ev.pos()))
